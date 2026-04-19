@@ -1,26 +1,188 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/*
+ * SmartPocket — Modern fintech design system.
+ * Deep navy + mint, glassmorphism, soft shadows. Dark-first.
+ */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--border);
+    box-sizing: border-box;
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  html,
+  body {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    background-image: var(--gradient-hero);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+
+  .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Dark = default (fintech look). Light is opt-in via .light class on <html>. */
+:root {
+  --radius: 1rem;
+
+  /* Deep navy backdrop */
+  --background: oklch(0.18 0.05 270);
+  --foreground: oklch(0.98 0.01 250);
+
+  /* Glass card */
+  --card: oklch(0.23 0.05 268);
+  --card-foreground: oklch(0.98 0.01 250);
+  --popover: oklch(0.23 0.05 268);
+  --popover-foreground: oklch(0.98 0.01 250);
+
+  /* Mint primary */
+  --primary: oklch(0.82 0.16 168);
+  --primary-foreground: oklch(0.18 0.05 270);
+  --primary-glow: oklch(0.88 0.14 175);
+
+  --secondary: oklch(0.28 0.05 268);
+  --secondary-foreground: oklch(0.98 0.01 250);
+  --muted: oklch(0.27 0.04 268);
+  --muted-foreground: oklch(0.72 0.03 260);
+  --accent: oklch(0.32 0.06 268);
+  --accent-foreground: oklch(0.98 0.01 250);
+
+  --destructive: oklch(0.68 0.22 22);
+  --destructive-foreground: oklch(0.98 0.01 250);
+  --success: oklch(0.78 0.16 162);
+  --success-foreground: oklch(0.18 0.05 270);
+  --warning: oklch(0.82 0.16 75);
+  --warning-foreground: oklch(0.18 0.05 270);
+
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.82 0.16 168 / 60%);
+
+  /* Chart palette — mint, sky, violet, amber, coral */
+  --chart-1: oklch(0.82 0.16 168);
+  --chart-2: oklch(0.72 0.15 230);
+  --chart-3: oklch(0.7 0.18 295);
+  --chart-4: oklch(0.82 0.16 75);
+  --chart-5: oklch(0.7 0.2 25);
+
+  --sidebar: oklch(0.16 0.05 270);
+  --sidebar-foreground: oklch(0.92 0.02 250);
+  --sidebar-primary: oklch(0.82 0.16 168);
+  --sidebar-primary-foreground: oklch(0.18 0.05 270);
+  --sidebar-accent: oklch(0.24 0.05 268);
+  --sidebar-accent-foreground: oklch(0.98 0.01 250);
+  --sidebar-border: oklch(1 0 0 / 6%);
+
+  /* Gradients & shadows */
+  --gradient-hero: radial-gradient(
+      120% 80% at 80% 0%,
+      color-mix(in oklab, var(--primary) 28%, transparent) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      90% 70% at 0% 100%,
+      color-mix(in oklab, oklch(0.6 0.2 285) 25%, transparent) 0%,
+      transparent 55%
+    ),
+    linear-gradient(180deg, var(--background) 0%, oklch(0.14 0.05 270) 100%);
+  --gradient-primary: linear-gradient(135deg, var(--primary), var(--primary-glow));
+  --gradient-card: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--card) 92%, transparent),
+    color-mix(in oklab, var(--card) 70%, transparent)
+  );
+  --shadow-soft: 0 4px 20px -8px oklch(0 0 0 / 0.4);
+  --shadow-elevated: 0 24px 60px -20px oklch(0 0 0 / 0.55);
+  --shadow-glow: 0 10px 40px -10px color-mix(in oklab, var(--primary) 45%, transparent);
+
+  /* Font families */
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+.light {
+  --background: oklch(0.985 0.005 250);
+  --foreground: oklch(0.2 0.04 268);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.2 0.04 268);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.2 0.04 268);
+  --primary: oklch(0.66 0.15 168);
+  --primary-foreground: oklch(1 0 0);
+  --primary-glow: oklch(0.74 0.14 175);
+  --secondary: oklch(0.96 0.01 250);
+  --secondary-foreground: oklch(0.2 0.04 268);
+  --muted: oklch(0.96 0.01 250);
+  --muted-foreground: oklch(0.5 0.03 260);
+  --accent: oklch(0.94 0.02 250);
+  --accent-foreground: oklch(0.2 0.04 268);
+  --destructive: oklch(0.6 0.23 22);
+  --destructive-foreground: oklch(1 0 0);
+  --success: oklch(0.62 0.16 162);
+  --success-foreground: oklch(1 0 0);
+  --warning: oklch(0.7 0.16 75);
+  --warning-foreground: oklch(0.2 0.04 268);
+  --border: oklch(0.2 0.04 268 / 10%);
+  --input: oklch(0.2 0.04 268 / 14%);
+  --ring: oklch(0.66 0.15 168 / 60%);
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: oklch(0.2 0.04 268);
+  --sidebar-primary: oklch(0.66 0.15 168);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.96 0.01 250);
+  --sidebar-accent-foreground: oklch(0.2 0.04 268);
+  --sidebar-border: oklch(0.2 0.04 268 / 8%);
+  --gradient-hero: radial-gradient(
+      120% 80% at 80% 0%,
+      color-mix(in oklab, var(--primary) 18%, transparent) 0%,
+      transparent 60%
+    ),
+    linear-gradient(180deg, var(--background) 0%, oklch(0.97 0.01 250) 100%);
+}
+
+@layer utilities {
+  .glass {
+    background: var(--gradient-card);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-soft);
+  }
+  .glass-strong {
+    background: color-mix(in oklab, var(--card) 80%, transparent);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-elevated);
+  }
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+  .text-gradient {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+  .shadow-elevated {
+    box-shadow: var(--shadow-elevated);
+  }
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
 }
