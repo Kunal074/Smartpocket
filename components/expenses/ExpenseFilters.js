@@ -3,6 +3,7 @@
 import { CATEGORIES } from '@/lib/categories';
 import { currentMonthKey } from '@/lib/format';
 import { Filter } from 'lucide-react';
+import Select from '@/components/ui/Select';
 
 export default function ExpenseFilters({ 
   filterMonth, 
@@ -10,6 +11,19 @@ export default function ExpenseFilters({
   filterCategory, 
   setFilterCategory 
 }) {
+  const monthOptions = [
+    { value: 'all', label: 'All Time' },
+    { value: currentMonthKey(), label: 'This Month' },
+  ];
+
+  const categoryOptions = [
+    { value: 'all', label: 'All Categories' },
+    ...CATEGORIES.filter((c) => c.kind === 'expense').map((cat) => ({
+      value: cat.id,
+      label: `${cat.emoji} ${cat.name}`,
+    })),
+  ];
+
   return (
     <div className="flex flex-wrap items-center gap-3">
       <div className="flex items-center gap-2 rounded-xl border border-border bg-card/50 px-3 py-1.5 backdrop-blur">
@@ -17,28 +31,21 @@ export default function ExpenseFilters({
         <span className="text-xs font-medium text-muted-foreground">Filter</span>
       </div>
 
-      <select
-        value={filterMonth}
-        onChange={(e) => setFilterMonth(e.target.value)}
-        className="rounded-xl border border-border bg-card px-3 py-1.5 text-sm font-medium transition hover:bg-accent/40 focus:border-primary focus:outline-none"
-      >
-        <option value="all">All Time</option>
-        <option value={currentMonthKey()}>This Month</option>
-        {/* We can dynamically generate more months based on actual data later */}
-      </select>
+      <div className="w-36">
+        <Select
+          value={filterMonth}
+          onChange={setFilterMonth}
+          options={monthOptions}
+        />
+      </div>
 
-      <select
-        value={filterCategory}
-        onChange={(e) => setFilterCategory(e.target.value)}
-        className="rounded-xl border border-border bg-card px-3 py-1.5 text-sm font-medium transition hover:bg-accent/40 focus:border-primary focus:outline-none"
-      >
-        <option value="all">All Categories</option>
-        {CATEGORIES.filter((c) => c.kind === 'expense').map((cat) => (
-          <option key={cat.id} value={cat.id}>
-            {cat.emoji} {cat.name}
-          </option>
-        ))}
-      </select>
+      <div className="w-48">
+        <Select
+          value={filterCategory}
+          onChange={setFilterCategory}
+          options={categoryOptions}
+        />
+      </div>
     </div>
   );
 }

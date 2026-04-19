@@ -6,6 +6,7 @@ import { currentMonthKey } from '@/lib/format';
 import { CATEGORIES } from '@/lib/categories';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import Select from '@/components/ui/Select';
 
 export default function BudgetsPage() {
   const [budgets, setBudgets] = useState([]);
@@ -117,16 +118,17 @@ export default function BudgetsPage() {
         <form onSubmit={handleAddSubmit} className="glass rounded-3xl p-6 sm:p-8">
           <h3 className="font-display text-lg font-semibold">Create Budget</h3>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <select
-              value={newCategoryId}
-              onChange={(e) => setNewCategoryId(e.target.value)}
-              className="w-full rounded-xl border border-border bg-input/50 px-4 py-3 text-sm focus:border-primary focus:outline-none"
-            >
-              <option value="" disabled>Select Category</option>
-              {availableCategories.map(cat => (
-                <option key={cat.id} value={cat.id}>{cat.emoji} {cat.name}</option>
-              ))}
-            </select>
+            <div className="w-full">
+              <Select
+                value={newCategoryId}
+                onChange={setNewCategoryId}
+                placeholder="Select Category"
+                options={availableCategories.map(cat => ({
+                  value: cat.id,
+                  label: `${cat.emoji} ${cat.name}`
+                }))}
+              />
+            </div>
             
             <div className="relative">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
