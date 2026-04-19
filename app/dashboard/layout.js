@@ -5,8 +5,7 @@ import Sidebar from '@/components/layout/Sidebar';
 import TopBar from '@/components/layout/TopBar';
 import MobileNav from '@/components/layout/MobileNav';
 
-// We'll build this component in Phase 6, importing it now
-// import AddExpenseSheet from '@/components/expenses/AddExpenseSheet';
+import AddExpenseSheet from '@/components/expenses/AddExpenseSheet';
 
 export default function DashboardLayout({ children }) {
   const [addOpen, setAddOpen] = useState(false);
@@ -22,9 +21,7 @@ export default function DashboardLayout({ children }) {
       </main>
       <MobileNav onAddClick={() => setAddOpen(true)} />
       
-      {/* 
-        <AddExpenseSheet open={addOpen} onOpenChange={setAddOpen} /> 
-      */}
+      <AddExpenseSheet open={addOpen} onOpenChange={setAddOpen} />
     </div>
   );
 }
