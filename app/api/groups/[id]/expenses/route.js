@@ -5,7 +5,7 @@ import { calculateSplits } from '@/lib/splitCalculator';
 
 // GET /api/groups/[id]/expenses
 // List expenses for a group (latest first)
-export const GET = withAuth(async (request, { user, params }) => {
+export const GET = withAuth(async (request, user, { params }) => {
   try {
     const groupId = params.id;
     
@@ -40,7 +40,7 @@ export const GET = withAuth(async (request, { user, params }) => {
 
 // POST /api/groups/[id]/expenses
 // Create a new expense and auto-calculate the splits
-export const POST = withAuth(async (request, { user, params }) => {
+export const POST = withAuth(async (request, user, { params }) => {
   try {
     const groupId = params.id;
     

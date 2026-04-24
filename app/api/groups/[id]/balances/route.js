@@ -14,7 +14,7 @@ async function checkMembership(groupId, userId) {
 
 // GET /api/groups/[id]/balances
 // Compute the net balance of each user and return simplified settlement transactions
-export const GET = withAuth(async (request, { user, params }) => {
+export const GET = withAuth(async (request, user, { params }) => {
   try {
     const groupId = params.id;
     

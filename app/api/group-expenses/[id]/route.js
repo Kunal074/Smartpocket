@@ -21,7 +21,7 @@ async function getExpenseAndCheckAuth(expenseId, userId) {
 
 // PUT /api/group-expenses/[id]
 // Edit an existing group expense
-export const PUT = withAuth(async (request, { user, params }) => {
+export const PUT = withAuth(async (request, user, { params }) => {
   try {
     const expenseId = params.id;
     
@@ -114,7 +114,7 @@ export const PUT = withAuth(async (request, { user, params }) => {
 
 // DELETE /api/group-expenses/[id]
 // Delete a group expense
-export const DELETE = withAuth(async (request, { user, params }) => {
+export const DELETE = withAuth(async (request, user, { params }) => {
   try {
     const expenseId = params.id;
     

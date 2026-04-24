@@ -4,7 +4,7 @@ import { withAuth } from '@/lib/middleware';
 
 // GET /api/groups
 // List all groups the current user belongs to
-export const GET = withAuth(async (request, { user }) => {
+export const GET = withAuth(async (request, user) => {
   try {
     const result = await query(`
       SELECT 
@@ -26,7 +26,7 @@ export const GET = withAuth(async (request, { user }) => {
 
 // POST /api/groups
 // Create a new group and add the creator as an admin member
-export const POST = withAuth(async (request, { user }) => {
+export const POST = withAuth(async (request, user) => {
   try {
     const body = await request.json();
     const { name, type = 'custom', description = '', icon, color } = body;

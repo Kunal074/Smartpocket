@@ -13,7 +13,7 @@ async function checkMembership(groupId, userId) {
 
 // GET /api/groups/[id]
 // Get group details and its members
-export const GET = withAuth(async (request, { user, params }) => {
+export const GET = withAuth(async (request, user, { params }) => {
   try {
     const groupId = params.id;
     
@@ -49,7 +49,7 @@ export const GET = withAuth(async (request, { user, params }) => {
 
 // PUT /api/groups/[id]
 // Update group details (only admin can update)
-export const PUT = withAuth(async (request, { user, params }) => {
+export const PUT = withAuth(async (request, user, { params }) => {
   try {
     const groupId = params.id;
     
@@ -83,7 +83,7 @@ export const PUT = withAuth(async (request, { user, params }) => {
 
 // DELETE /api/groups/[id]
 // Archive/Delete group (only admin can delete)
-export const DELETE = withAuth(async (request, { user, params }) => {
+export const DELETE = withAuth(async (request, user, { params }) => {
   try {
     const groupId = params.id;
     

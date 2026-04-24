@@ -13,7 +13,7 @@ async function checkMembership(groupId, userId) {
 
 // GET /api/settlements?groupId=xxx
 // List settlements for a specific group
-export const GET = withAuth(async (request, { user }) => {
+export const GET = withAuth(async (request, user) => {
   try {
     const url = new URL(request.url);
     const groupId = url.searchParams.get('groupId');
@@ -49,7 +49,7 @@ export const GET = withAuth(async (request, { user }) => {
 
 // POST /api/settlements
 // Record a new settlement
-export const POST = withAuth(async (request, { user }) => {
+export const POST = withAuth(async (request, user) => {
   try {
     const body = await request.json();
     const { group_id, paid_to, amount, payment_method = 'upi', note = '' } = body;

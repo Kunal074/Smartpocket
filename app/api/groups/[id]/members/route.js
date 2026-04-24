@@ -13,7 +13,7 @@ async function checkAdmin(groupId, userId) {
 
 // POST /api/groups/[id]/members
 // Add a member by email (only admins can add)
-export const POST = withAuth(async (request, { user, params }) => {
+export const POST = withAuth(async (request, user, { params }) => {
   try {
     const groupId = params.id;
     
@@ -59,7 +59,7 @@ export const POST = withAuth(async (request, { user, params }) => {
 
 // DELETE /api/groups/[id]/members?userId=xxx
 // Remove a member (only admins can remove, or user can remove themselves)
-export const DELETE = withAuth(async (request, { user, params }) => {
+export const DELETE = withAuth(async (request, user, { params }) => {
   try {
     const groupId = params.id;
     const url = new URL(request.url);
