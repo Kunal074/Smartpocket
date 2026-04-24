@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { withAuth } from '@/lib/auth';
+import { withAuth } from '@/lib/middleware';
 
 // Helper to check if user is admin
 async function checkAdmin(groupId, userId) {
@@ -15,7 +15,7 @@ async function checkAdmin(groupId, userId) {
 // Add a member by email (only admins can add)
 export const POST = withAuth(async (request, user, { params }) => {
   try {
-    const groupId = params.id;
+    const { id: groupId } = await params;
     
     const isAdmin = await checkAdmin(groupId, user.id);
     if (!isAdmin) {
@@ -61,7 +61,7 @@ export const POST = withAuth(async (request, user, { params }) => {
 // Remove a member (only admins can remove, or user can remove themselves)
 export const DELETE = withAuth(async (request, user, { params }) => {
   try {
-    const groupId = params.id;
+    const { id: groupId } = await params;
     const url = new URL(request.url);
     const targetUserId = url.searchParams.get('userId');
 

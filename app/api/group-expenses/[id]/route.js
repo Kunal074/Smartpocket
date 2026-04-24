@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { withAuth } from '@/lib/auth';
+import { withAuth } from '@/lib/middleware';
 import { calculateSplits } from '@/lib/splitCalculator';
 
 // Helper to get expense and check auth
@@ -23,7 +23,7 @@ async function getExpenseAndCheckAuth(expenseId, userId) {
 // Edit an existing group expense
 export const PUT = withAuth(async (request, user, { params }) => {
   try {
-    const expenseId = params.id;
+    const { id: expenseId } = await params;
     
     const existingExpense = await getExpenseAndCheckAuth(expenseId, user.id);
     if (!existingExpense) {
@@ -116,7 +116,7 @@ export const PUT = withAuth(async (request, user, { params }) => {
 // Delete a group expense
 export const DELETE = withAuth(async (request, user, { params }) => {
   try {
-    const expenseId = params.id;
+    const { id: expenseId } = await params;
     
     const existingExpense = await getExpenseAndCheckAuth(expenseId, user.id);
     if (!existingExpense) {

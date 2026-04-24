@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { withAuth } from '@/lib/auth';
+import { withAuth } from '@/lib/middleware';
 
 // Helper to check if user is a member of the group
 async function checkMembership(groupId, userId) {
@@ -15,7 +15,7 @@ async function checkMembership(groupId, userId) {
 // Get group details and its members
 export const GET = withAuth(async (request, user, { params }) => {
   try {
-    const groupId = params.id;
+    const { id: groupId } = await params;
     
     const membership = await checkMembership(groupId, user.id);
     if (!membership) {
@@ -51,7 +51,7 @@ export const GET = withAuth(async (request, user, { params }) => {
 // Update group details (only admin can update)
 export const PUT = withAuth(async (request, user, { params }) => {
   try {
-    const groupId = params.id;
+    const { id: groupId } = await params;
     
     const membership = await checkMembership(groupId, user.id);
     if (!membership || membership.role !== 'admin') {
@@ -85,7 +85,7 @@ export const PUT = withAuth(async (request, user, { params }) => {
 // Archive/Delete group (only admin can delete)
 export const DELETE = withAuth(async (request, user, { params }) => {
   try {
-    const groupId = params.id;
+    const { id: groupId } = await params;
     
     const membership = await checkMembership(groupId, user.id);
     if (!membership || membership.role !== 'admin') {

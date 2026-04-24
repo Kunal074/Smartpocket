@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { withAuth } from '@/lib/auth';
+import { withAuth } from '@/lib/middleware';
 import { calculateSplits } from '@/lib/splitCalculator';
 
 // GET /api/groups/[id]/expenses
 // List expenses for a group (latest first)
 export const GET = withAuth(async (request, user, { params }) => {
   try {
-    const groupId = params.id;
+    const { id: groupId } = await params;
     
     // Check membership
     const memberCheck = await query(
@@ -42,7 +42,7 @@ export const GET = withAuth(async (request, user, { params }) => {
 // Create a new expense and auto-calculate the splits
 export const POST = withAuth(async (request, user, { params }) => {
   try {
-    const groupId = params.id;
+    const { id: groupId } = await params;
     
     const memberCheck = await query(
       'SELECT role FROM group_members WHERE group_id = $1 AND user_id = $2',

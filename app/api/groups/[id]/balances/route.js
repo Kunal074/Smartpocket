@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { withAuth } from '@/lib/auth';
+import { withAuth } from '@/lib/middleware';
 import { simplifyDebts } from '@/lib/debtSimplifier';
 
 // Helper to check if user is a member of the group
@@ -16,7 +16,7 @@ async function checkMembership(groupId, userId) {
 // Compute the net balance of each user and return simplified settlement transactions
 export const GET = withAuth(async (request, user, { params }) => {
   try {
-    const groupId = params.id;
+    const { id: groupId } = await params;
     
     const membership = await checkMembership(groupId, user.id);
     if (!membership) {

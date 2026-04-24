@@ -32,6 +32,19 @@ export default function GroupDetailPage({ params }) {
     );
   }
 
+  if (!currentGroup && !groupLoading) {
+    return (
+      <div className="flex h-[60vh] flex-col items-center justify-center space-y-4">
+        <div className="text-4xl">⚠️</div>
+        <h2 className="text-xl font-bold">Group not found</h2>
+        <p className="text-muted-foreground">This group might have been deleted or you don't have access.</p>
+        <Link href="/dashboard/groups" className="text-primary hover:underline">
+          Go back to Groups
+        </Link>
+      </div>
+    );
+  }
+
   if (!currentGroup) return null;
 
   return (
