@@ -1,14 +1,54 @@
 'use client';
 
-import { LogOut, Save, Shield, User } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { LogOut, Save, Shield, User, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function SettingsPage() {
-  const isGuest = true; // Temporary for MVP, will use real auth state later
+  const { user, token, logout } = useAuth();
+  const [name, setName] = useState('');
+  const [upiId, setUpiId] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSave = (e) => {
+  useEffect(() => {
+    if (user) {
+      setName(user.name || '');
+      setUpiId(user.upi_id || '');
+    }
+  }, [user]);
+
+  const isGuest = !user;
+
+  const handleSave = async (e) => {
     e.preventDefault();
-    toast.success('Settings saved');
+    if (isGuest) {
+      toast.success('Settings saved locally in guest mode');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/users/me', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ name, upi_id: upiId })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update profile');
+
+      toast.success('Profile updated successfully');
+      // The useAuth hook will eventually re-fetch me if we add a refresh method, 
+      // but for now local state is updated.
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -25,10 +65,13 @@ export default function SettingsPage() {
             <div>
               <p className="font-medium">You are in Guest Mode</p>
               <p className="mt-1 text-sm opacity-80">
-                Your data is saved locally. Create an account to sync your expenses across all your devices and ensure you never lose your data.
+                Sign in to manage your profile and start splitting expenses with friends.
               </p>
-              <button className="mt-3 rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90">
-                Sign up now
+              <button 
+                onClick={() => window.location.href = '/login'}
+                className="mt-3 rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90"
+              >
+                Sign in now
               </button>
             </div>
           </div>
@@ -46,8 +89,11 @@ export default function SettingsPage() {
               <label className="text-xs font-medium uppercase text-muted-foreground">Name</label>
               <input
                 type="text"
-                defaultValue="Guest User"
-                className="mt-1 w-full rounded-xl border border-border bg-input/50 px-4 py-2.5 text-sm focus:border-primary focus:outline-none"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Your Name"
+                disabled={isGuest}
+                className="mt-1 w-full rounded-xl border border-border bg-input/50 px-4 py-2.5 text-sm focus:border-primary focus:outline-none disabled:opacity-50"
               />
             </div>
             <div>
@@ -55,17 +101,30 @@ export default function SettingsPage() {
               <input
                 type="email"
                 disabled
-                placeholder="Not provided in Guest Mode"
+                value={user?.email || ''}
+                placeholder={isGuest ? "Not provided in Guest Mode" : ""}
                 className="mt-1 w-full rounded-xl border border-border bg-input/20 px-4 py-2.5 text-sm text-muted-foreground focus:outline-none"
               />
             </div>
+
+            <div className="pt-4 pb-2">
+              <h3 className="flex items-center gap-2 font-display text-lg font-semibold border-t border-border/50 pt-6">
+                <Wallet className="h-5 w-5 text-primary" /> Payment details
+              </h3>
+              <p className="text-xs text-muted-foreground mt-1">
+                Required for SmartSplit. This is how friends will pay you back.
+              </p>
+            </div>
+
             <div>
-              <label className="text-xs font-medium uppercase text-muted-foreground">Currency</label>
+              <label className="text-xs font-medium uppercase text-muted-foreground">UPI ID</label>
               <input
                 type="text"
-                disabled
-                defaultValue="INR (₹)"
-                className="mt-1 w-full rounded-xl border border-border bg-input/20 px-4 py-2.5 text-sm text-muted-foreground focus:outline-none"
+                value={upiId}
+                onChange={(e) => setUpiId(e.target.value)}
+                placeholder="e.g. rahul@okicici"
+                disabled={isGuest}
+                className="mt-1 w-full rounded-xl border border-border bg-input/50 px-4 py-2.5 text-sm focus:border-primary focus:outline-none disabled:opacity-50"
               />
             </div>
           </div>
@@ -73,9 +132,10 @@ export default function SettingsPage() {
           <div className="mt-8 flex justify-end">
             <button
               type="submit"
-              className="inline-flex items-center gap-2 rounded-xl gradient-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow hover:opacity-95"
+              disabled={isLoading || isGuest}
+              className="inline-flex items-center gap-2 rounded-xl gradient-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow hover:opacity-95 disabled:opacity-50"
             >
-              <Save className="h-4 w-4" /> Save Changes
+              <Save className="h-4 w-4" /> {isLoading ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
         </div>
@@ -83,7 +143,10 @@ export default function SettingsPage() {
 
       {!isGuest && (
         <div className="flex justify-end">
-          <button className="inline-flex items-center gap-2 rounded-xl bg-destructive/10 px-5 py-2.5 text-sm font-semibold text-destructive hover:bg-destructive hover:text-destructive-foreground">
+          <button 
+            onClick={logout}
+            className="inline-flex items-center gap-2 rounded-xl bg-destructive/10 px-5 py-2.5 text-sm font-semibold text-destructive hover:bg-destructive hover:text-destructive-foreground"
+          >
             <LogOut className="h-4 w-4" /> Sign Out
           </button>
         </div>

@@ -9,13 +9,14 @@ import {
   Repeat,
   Sparkles,
   Plus,
+  Users,
 } from 'lucide-react';
 
 const NAV = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/expenses', label: 'Expenses', icon: ListChecks },
   { href: '/dashboard/budgets', label: 'Budgets', icon: PiggyBank },
-  { href: '/dashboard/recurring', label: 'Recurring', icon: Repeat },
+  { href: '/dashboard/groups', label: 'Groups', icon: Users },
   { href: '/dashboard/insights', label: 'Insights', icon: Sparkles },
 ];
 
