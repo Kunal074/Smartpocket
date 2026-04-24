@@ -32,7 +32,7 @@ export function useGroupExpenses() {
       setError(err.message);
       throw err;
     }
-  }, [token]);
+  }, []);
 
   // Fetch group expenses
   const fetchExpenses = useCallback(async (groupId) => {

@@ -35,7 +35,7 @@ export function useGroups() {
       setError(err.message);
       throw err;
     }
-  }, [token]);
+  }, []);
 
   // Fetch all groups for the user
   const fetchGroups = useCallback(async () => {
