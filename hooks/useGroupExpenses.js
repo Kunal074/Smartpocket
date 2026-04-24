@@ -3,14 +3,17 @@ import { useAuth } from './useAuth';
 import { toast } from 'sonner';
 
 export function useGroupExpenses() {
-  const { token } = useAuth();
   const [expenses, setExpenses] = useState([]);
   const [settlements, setSettlements] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const apiCall = useCallback(async (endpoint, options = {}) => {
-    if (!token) return null;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    if (!token) {
+      toast.error('You must be logged in to do this');
+      return null;
+    }
     
     try {
       const res = await fetch(endpoint, {

@@ -3,7 +3,7 @@ import { useAuth } from './useAuth';
 import { toast } from 'sonner';
 
 export function useGroups() {
-  const { token, user } = useAuth();
+  const { user } = useAuth();
   const [groups, setGroups] = useState([]);
   const [currentGroup, setCurrentGroup] = useState(null);
   const [groupBalances, setGroupBalances] = useState(null);
@@ -12,7 +12,11 @@ export function useGroups() {
 
   // Helper for API calls
   const apiCall = useCallback(async (endpoint, options = {}) => {
-    if (!token) return null;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    if (!token) {
+      toast.error('You must be logged in to do this');
+      return null;
+    }
     
     try {
       const res = await fetch(endpoint, {
