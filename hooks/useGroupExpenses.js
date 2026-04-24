@@ -40,7 +40,9 @@ export function useGroupExpenses() {
     setError(null);
     try {
       const data = await apiCall(`/api/groups/${groupId}/expenses`);
-      if (data) setExpenses(data);
+      if (data) {
+        setExpenses(Array.isArray(data) ? data : (data.expenses ?? []));
+      }
       return data;
     } catch (err) {
       toast.error(err.message || 'Failed to fetch group expenses');
@@ -55,7 +57,9 @@ export function useGroupExpenses() {
     setIsLoading(true);
     try {
       const data = await apiCall(`/api/settlements?groupId=${groupId}`);
-      if (data) setSettlements(data);
+      if (data) {
+        setSettlements(Array.isArray(data) ? data : (data.settlements ?? []));
+      }
       return data;
     } catch (err) {
       toast.error(err.message || 'Failed to fetch settlements');

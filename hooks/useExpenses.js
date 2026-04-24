@@ -15,7 +15,10 @@ export function useExpenses() {
       });
       if (res.ok) {
         const data = await res.json();
-        setExpenses(data);
+        // API may return bare array or { expenses: [] }
+        setExpenses(Array.isArray(data) ? data : (data.expenses ?? []));
+      } else {
+        setExpenses([]);
       }
     } catch (error) {
       console.error('Failed to fetch expenses:', error);
@@ -62,6 +65,7 @@ export function useExpenses() {
   return {
     expenses,
     loading,
+    isLoading: loading,   // alias for consistency
     fetchExpenses,
     addExpense,
     deleteExpense,

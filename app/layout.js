@@ -15,11 +15,11 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
-  // We apply the dark theme by default (for the fintech look)
-  // Can be customized or toggled via next-themes later if needed
   return (
-    <html lang="en" className="dark">
-      <body className={`${inter.variable} ${spaceGrotesk.variable} antialiased`}>
+    <html lang="en">
+      <body
+        className={`${inter.variable} ${spaceGrotesk.variable} antialiased theme-dark`}
+      >
         {children}
         <Toaster position="bottom-center" theme="dark" />
       </body>
