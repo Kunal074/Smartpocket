@@ -17,7 +17,7 @@ const NAV = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/dashboard/expenses', label: 'Expenses', icon: ListChecks },
   { href: '/dashboard/budgets', label: 'Budgets', icon: PiggyBank },
-  { href: '/dashboard/groups', label: 'Groups', icon: Users },
+  { href: '/dashboard/groups', label: 'SmartSplit', icon: Users },
   { href: '/dashboard/recurring', label: 'Recurring', icon: Repeat },
   { href: '/dashboard/insights', label: 'Insights', icon: Sparkles },
   { href: '/dashboard/settings', label: 'Settings', icon: SettingsIcon },

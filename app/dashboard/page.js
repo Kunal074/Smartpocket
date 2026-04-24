@@ -60,6 +60,24 @@ export default function DashboardPage() {
       
       <div className="grid gap-6 md:grid-cols-12">
         <div className="md:col-span-12">
+          {/* SmartSplit Promo Banner */}
+          <div className="mb-6 rounded-3xl bg-gradient-to-r from-primary/20 via-primary/5 to-transparent border border-primary/20 p-6 sm:p-8 relative overflow-hidden group transition-all hover:border-primary/40">
+            <div className="absolute right-0 top-0 -mt-8 -mr-8 text-primary/10 transition-transform group-hover:scale-110">
+              <svg width="200" height="200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <h3 className="font-display text-xl font-bold tracking-tight text-foreground relative z-10">
+              New: SmartSplit ✨
+            </h3>
+            <p className="mt-2 max-w-xl text-sm text-muted-foreground relative z-10">
+              Split bills seamlessly with your friends, roommates, and colleagues. Keep track of group trips and automatically calculate who owes what with the Minimum Cash Flow algorithm.
+            </p>
+            <div className="mt-6 relative z-10">
+              <a href="/dashboard/groups" className="inline-flex items-center gap-2 rounded-xl gradient-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow hover:opacity-90">
+                Try SmartSplit Now
+              </a>
+            </div>
+          </div>
+
           <RecentTransactions expenses={expenses} />
         </div>
       </div>
