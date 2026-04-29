@@ -3,39 +3,26 @@ import { query } from '@/lib/db';
 import { withAuth } from '@/lib/middleware';
 
 // Migration function to ensure schema is ready
-const runMigration = async () => {
+const ensureMigration = async () => {
   try {
-    // 1. Make group_id nullable in group_expenses
-    await query(`
-      ALTER TABLE group_expenses 
-      ALTER COLUMN group_id DROP NOT NULL;
-    `);
-  } catch (e) {
-    // Ignore error if it's already nullable
-  }
+    await query(`ALTER TABLE group_expenses ALTER COLUMN group_id DROP NOT NULL;`);
+  } catch (e) { /* ignore */ }
 
-  try {
-    // 2. Create friends table
-    await query(`
-      CREATE TABLE IF NOT EXISTS friends (
-        id SERIAL PRIMARY KEY,
-        user1_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-        user2_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(user1_id, user2_id)
-      );
-    `);
-  } catch (e) {
-    console.error('Migration error for friends table:', e);
-  }
+  await query(`
+    CREATE TABLE IF NOT EXISTS friends (
+      id SERIAL PRIMARY KEY,
+      user1_id UUID REFERENCES users(id) ON DELETE CASCADE,
+      user2_id UUID REFERENCES users(id) ON DELETE CASCADE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user1_id, user2_id)
+    );
+  `);
 };
-
-// Fire and forget the migration (runs once when module is loaded)
-runMigration();
 
 // GET /api/friends
 export const GET = withAuth(async (request, user) => {
   try {
+    await ensureMigration();
     const result = await query(`
       SELECT 
         f.id as friend_record_id,
@@ -61,6 +48,7 @@ export const GET = withAuth(async (request, user) => {
 // Body: { email } or { phone }
 export const POST = withAuth(async (request, user) => {
   try {
+    await ensureMigration();
     const body = await request.json();
     const { email, phone } = body;
 

@@ -10,7 +10,13 @@ export const GET = withAuth(async (request, user) => {
       SELECT 
         g.id, g.name, g.type, g.description, g.icon, g.color, g.currency, g.is_archived, g.created_at,
         gm.role,
-        (SELECT COUNT(*) FROM group_members WHERE group_id = g.id) as member_count
+        (SELECT COUNT(*) FROM group_members WHERE group_id = g.id) as member_count,
+        COALESCE(
+          (SELECT SUM(amount) FROM group_expenses WHERE group_id = g.id AND paid_by = $1), 0
+        ) - 
+        COALESCE(
+          (SELECT SUM(es.amount) FROM expense_splits es JOIN group_expenses e ON es.expense_id = e.id WHERE e.group_id = g.id AND es.user_id = $1), 0
+        ) as net_balance
       FROM groups g
       JOIN group_members gm ON g.id = gm.group_id
       WHERE gm.user_id = $1

@@ -30,7 +30,30 @@ export const GET = withAuth(async (request, user, { params }) => {
       LIMIT 100
     `, [groupId]);
 
-    return NextResponse.json(expensesResult.rows);
+    const expenseIds = expensesResult.rows.map(e => e.id);
+    
+    // Fetch all splits for these expenses in one query
+    let splitsMap = {};
+    if (expenseIds.length > 0) {
+      const splitsResult = await query(`
+        SELECT es.expense_id, es.user_id, es.amount, es.percentage, u.name as user_name
+        FROM expense_splits es
+        JOIN users u ON es.user_id = u.id
+        WHERE es.expense_id = ANY($1)
+      `, [expenseIds]);
+      splitsResult.rows.forEach(s => {
+        if (!splitsMap[s.expense_id]) splitsMap[s.expense_id] = [];
+        splitsMap[s.expense_id].push(s);
+      });
+    }
+
+    // Attach splits to each expense
+    const expensesWithSplits = expensesResult.rows.map(e => ({
+      ...e,
+      splits: splitsMap[e.id] || []
+    }));
+
+    return NextResponse.json(expensesWithSplits);
 
   } catch (error) {
     console.error('Error fetching expenses:', error);

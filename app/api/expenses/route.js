@@ -2,11 +2,62 @@ import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withAuth } from '@/lib/middleware';
 
-// GET all expenses for the current user
+// GET all expenses for the current user (Combined personal + group splits)
 const getHandler = async (request, user) => {
   try {
     const result = await query(
-      'SELECT id, amount, category_id as "categoryId", date, note, created_at FROM expenses WHERE user_id = $1 ORDER BY date DESC, created_at DESC',
+      `SELECT 
+        id, 
+        amount, 
+        category_id as "categoryId", 
+        date, 
+        note, 
+        created_at,
+        'personal' as type,
+        NULL as with_user,
+        NULL as "groupId",
+        user_id as paid_by
+      FROM expenses 
+      WHERE user_id = $1
+
+      UNION ALL
+
+      SELECT 
+        ge.id, 
+        es.amount, 
+        ge.category as "categoryId", 
+        ge.date, 
+        ge.title as note, 
+        ge.created_at,
+        'group' as type,
+        CASE WHEN ge.group_id IS NULL AND ge.paid_by != $1 THEN payer.name ELSE NULL END as with_user,
+        ge.group_id as "groupId",
+        ge.paid_by
+      FROM expense_splits es
+      JOIN group_expenses ge ON es.expense_id = ge.id
+      LEFT JOIN users payer ON ge.paid_by = payer.id
+      WHERE es.user_id = $1
+
+      UNION ALL
+
+      SELECT 
+        ge.id, 
+        es.amount, 
+        ge.category as "categoryId", 
+        ge.date, 
+        ge.title as note, 
+        ge.created_at,
+        'group' as type,
+        ower.name as with_user,
+        ge.group_id as "groupId",
+        ge.paid_by
+      FROM expense_splits es
+      JOIN group_expenses ge ON es.expense_id = ge.id
+      LEFT JOIN users ower ON es.user_id = ower.id
+      WHERE ge.group_id IS NULL AND ge.paid_by = $1 AND es.user_id != $1
+
+      ORDER BY date DESC, created_at DESC
+      LIMIT 100`,
       [user.id]
     );
 
@@ -14,7 +65,7 @@ const getHandler = async (request, user) => {
     const expenses = result.rows.map(row => ({
       ...row,
       amount: parseFloat(row.amount),
-      date: new Date(row.date).toISOString().slice(0, 10), // Return YYYY-MM-DD
+      date: row.date ? new Date(row.date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10), // Return YYYY-MM-DD
     }));
 
     return NextResponse.json({ expenses }, { status: 200 });
@@ -24,7 +75,7 @@ const getHandler = async (request, user) => {
   }
 };
 
-// POST a new expense for the current user
+// POST a new expense for the current user (Personal)
 const postHandler = async (request, user) => {
   try {
     const body = await request.json();
@@ -43,6 +94,7 @@ const postHandler = async (request, user) => {
       ...result.rows[0],
       amount: parseFloat(result.rows[0].amount),
       date: new Date(result.rows[0].date).toISOString().slice(0, 10),
+      type: 'personal'
     };
 
     return NextResponse.json({ expense }, { status: 201 });

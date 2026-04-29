@@ -2,90 +2,94 @@ import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withAuth } from '@/lib/middleware';
 
-// Helper to check if user is admin
-async function checkAdmin(groupId, userId) {
-  const result = await query(
-    'SELECT role FROM group_members WHERE group_id = $1 AND user_id = $2',
-    [groupId, userId]
-  );
-  return result.rows[0]?.role === 'admin';
-}
+// GET /api/groups/[id]/members
+// Returns all members of the group
+export const GET = withAuth(async (request, user, { params }) => {
+  try {
+    const { id: groupId } = await params;
+
+    // Verify membership
+    const memberCheck = await query(
+      'SELECT role FROM group_members WHERE group_id = $1 AND user_id = $2',
+      [groupId, user.id]
+    );
+    if (memberCheck.rowCount === 0) {
+      return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
+    }
+
+    const result = await query(`
+      SELECT
+        gm.user_id,
+        gm.role,
+        u.name,
+        u.email,
+        gm.joined_at
+      FROM group_members gm
+      JOIN users u ON u.id = gm.user_id
+      WHERE gm.group_id = $1
+      ORDER BY gm.joined_at ASC
+    `, [groupId]);
+
+    return NextResponse.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching group members:', error);
+    return NextResponse.json({ error: 'Failed to fetch members' }, { status: 500 });
+  }
+});
 
 // POST /api/groups/[id]/members
-// Add a member by email (only admins can add)
+// Add a new member by email
 export const POST = withAuth(async (request, user, { params }) => {
   try {
     const { id: groupId } = await params;
-    
-    const isAdmin = await checkAdmin(groupId, user.id);
-    if (!isAdmin) {
+
+    // Verify requester is admin
+    const adminCheck = await query(
+      "SELECT role FROM group_members WHERE group_id = $1 AND user_id = $2 AND role = 'admin'",
+      [groupId, user.id]
+    );
+    if (adminCheck.rowCount === 0) {
       return NextResponse.json({ error: 'Only admins can add members' }, { status: 403 });
     }
 
-    const { email, role = 'member' } = await request.json();
+    const body = await request.json();
+    const { email } = body;
+
     if (!email) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
     // Find user by email
-    const userResult = await query('SELECT id FROM users WHERE email = $1', [email]);
+    const userResult = await query('SELECT id, name, email FROM users WHERE email = $1', [email]);
     if (userResult.rowCount === 0) {
-      return NextResponse.json({ error: 'User not found with this email' }, { status: 404 });
+      return NextResponse.json({ error: 'User not found with that email' }, { status: 404 });
     }
-    const targetUserId = userResult.rows[0].id;
+
+    const newMember = userResult.rows[0];
 
     // Check if already a member
-    const existingResult = await query(
-      'SELECT id FROM group_members WHERE group_id = $1 AND user_id = $2',
-      [groupId, targetUserId]
+    const existingCheck = await query(
+      'SELECT user_id FROM group_members WHERE group_id = $1 AND user_id = $2',
+      [groupId, newMember.id]
     );
-    if (existingResult.rowCount > 0) {
-      return NextResponse.json({ error: 'User is already a member' }, { status: 400 });
+    if (existingCheck.rowCount > 0) {
+      return NextResponse.json({ error: 'User is already a member' }, { status: 409 });
     }
 
-    // Add to group
-    await query(`
-      INSERT INTO group_members (group_id, user_id, role)
-      VALUES ($1, $2, $3)
-    `, [groupId, targetUserId, role]);
-
-    return NextResponse.json({ success: true, message: 'Member added successfully' }, { status: 201 });
-
-  } catch (error) {
-    console.error('Error adding member:', error);
-    return NextResponse.json({ error: 'Failed to add member' }, { status: 500 });
-  }
-});
-
-// DELETE /api/groups/[id]/members?userId=xxx
-// Remove a member (only admins can remove, or user can remove themselves)
-export const DELETE = withAuth(async (request, user, { params }) => {
-  try {
-    const { id: groupId } = await params;
-    const url = new URL(request.url);
-    const targetUserId = url.searchParams.get('userId');
-
-    if (!targetUserId) {
-      return NextResponse.json({ error: 'Target userId is required' }, { status: 400 });
-    }
-
-    const isAdmin = await checkAdmin(groupId, user.id);
-    
-    // Can only remove if you are an admin OR you are leaving the group yourself
-    if (!isAdmin && user.id !== targetUserId) {
-      return NextResponse.json({ error: 'Not authorized to remove this member' }, { status: 403 });
-    }
-
-    // Remove from group
     await query(
-      'DELETE FROM group_members WHERE group_id = $1 AND user_id = $2',
-      [groupId, targetUserId]
+      "INSERT INTO group_members (group_id, user_id, role) VALUES ($1, $2, 'member')",
+      [groupId, newMember.id]
     );
 
-    return NextResponse.json({ success: true, message: 'Member removed successfully' });
+    return NextResponse.json({
+      user_id: newMember.id,
+      name: newMember.name,
+      email: newMember.email,
+      role: 'member',
+    }, { status: 201 });
 
   } catch (error) {
-    console.error('Error removing member:', error);
-    return NextResponse.json({ error: 'Failed to remove member' }, { status: 500 });
+    console.error('Error adding group member:', error);
+    return NextResponse.json({ error: 'Failed to add member' }, { status: 500 });
   }
 });
