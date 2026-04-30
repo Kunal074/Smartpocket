@@ -3,13 +3,12 @@ import { query } from '@/lib/db';
 import { withAuth } from '@/lib/middleware';
 import Groq from 'groq-sdk';
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
-
 // GET /api/analytics/insights?month=04&year=2026
 const getHandler = async (request, user) => {
   try {
+    const groq = new Groq({
+      apiKey: process.env.GROQ_API_KEY,
+    });
     const { searchParams } = new URL(request.url);
     const month = searchParams.get('month');
     const year = searchParams.get('year');
@@ -71,7 +70,7 @@ ${summaryText}
         { role: 'system', content: 'You are a concise financial advisor.' },
         { role: 'user', content: prompt }
       ],
-      model: 'llama3-8b-8192',
+      model: 'llama-3.1-8b-instant',
       temperature: 0.6,
       max_tokens: 300,
     });
@@ -82,7 +81,7 @@ ${summaryText}
 
   } catch (error) {
     console.error('Insights Error:', error);
-    return NextResponse.json({ error: 'Failed to generate insights' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to generate insights', details: error.message }, { status: 500 });
   }
 };
 
