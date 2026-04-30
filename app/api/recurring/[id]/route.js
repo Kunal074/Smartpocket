@@ -5,7 +5,7 @@ import { withAuth } from '@/lib/middleware';
 // DELETE /api/recurring/[id] — delete a recurring expense
 const deleteHandler = async (request, user, { params }) => {
   try {
-    const { id } = params;
+    const { id } = await params;
     const result = await query(
       `DELETE FROM recurring_expenses WHERE id = $1 AND user_id = $2 RETURNING id`,
       [id, user.id]
@@ -23,7 +23,7 @@ const deleteHandler = async (request, user, { params }) => {
 // PATCH /api/recurring/[id] — toggle is_active
 const patchHandler = async (request, user, { params }) => {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     const { is_active, note, amount, category_id, frequency, next_date } = body;
 

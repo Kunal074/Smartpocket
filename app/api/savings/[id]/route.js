@@ -5,7 +5,7 @@ import { withAuth } from '@/lib/middleware';
 // PATCH /api/savings/[id] — Update savings goal (e.g. add funds)
 const patchHandler = async (request, user, { params }) => {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     const { saved_amount, is_completed, name, target_amount, target_date, icon, color } = body;
 
@@ -25,7 +25,7 @@ const patchHandler = async (request, user, { params }) => {
       return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
     }
 
-    values.push(id, user.id);
+    values.push(parseInt(id, 10), user.id);
     const result = await query(
       `UPDATE savings_goals SET ${fields.join(', ')} WHERE id = $${idx++} AND user_id = $${idx} RETURNING *`,
       values
@@ -45,10 +45,10 @@ const patchHandler = async (request, user, { params }) => {
 // DELETE /api/savings/[id] — Delete a savings goal
 const deleteHandler = async (request, user, { params }) => {
   try {
-    const { id } = params;
+    const { id } = await params;
     const result = await query(
       `DELETE FROM savings_goals WHERE id = $1 AND user_id = $2 RETURNING id`,
-      [id, user.id]
+      [parseInt(id, 10), user.id]
     );
 
     if (result.rowCount === 0) {
