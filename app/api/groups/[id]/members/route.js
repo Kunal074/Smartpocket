@@ -53,16 +53,26 @@ export const POST = withAuth(async (request, user, { params }) => {
     }
 
     const body = await request.json();
-    const { email } = body;
+    const { email, phone } = body;
 
-    if (!email) {
-      return NextResponse.json({ error: 'Email is required' }, { status: 400 });
+    if (!email && !phone) {
+      return NextResponse.json({ error: 'Email or phone number is required' }, { status: 400 });
     }
 
-    // Find user by email
-    const userResult = await query('SELECT id, name, email FROM users WHERE email = $1', [email]);
-    if (userResult.rowCount === 0) {
-      return NextResponse.json({ error: 'User not found with that email' }, { status: 404 });
+    // Find user by email or phone
+    let userResult;
+    if (email) {
+      userResult = await query('SELECT id, name, email FROM users WHERE email = $1', [email]);
+      if (userResult.rowCount === 0) {
+        return NextResponse.json({ error: 'No user found with that email' }, { status: 404 });
+      }
+    } else {
+      // Strip all non-digits and take the last 10 digits to ignore country codes like +91
+      const cleanPhone = phone.replace(/\D/g, '').slice(-10);
+      userResult = await query('SELECT id, name, email FROM users WHERE phone LIKE $1', [`%${cleanPhone}`]);
+      if (userResult.rowCount === 0) {
+        return NextResponse.json({ error: 'No user found with that phone number. Make sure they have a SmartPocket account.' }, { status: 404 });
+      }
     }
 
     const newMember = userResult.rows[0];

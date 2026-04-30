@@ -29,7 +29,7 @@ const getHandler = async (request, user) => {
         ge.date, 
         ge.title as note, 
         ge.created_at,
-        'group' as type,
+        CASE WHEN ge.group_id IS NULL THEN 'direct' ELSE 'group' END as type,
         CASE WHEN ge.group_id IS NULL AND ge.paid_by != $1 THEN payer.name ELSE NULL END as with_user,
         ge.group_id as "groupId",
         ge.paid_by
@@ -47,7 +47,7 @@ const getHandler = async (request, user) => {
         ge.date, 
         ge.title as note, 
         ge.created_at,
-        'group' as type,
+        'direct' as type,
         ower.name as with_user,
         ge.group_id as "groupId",
         ge.paid_by

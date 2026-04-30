@@ -16,10 +16,17 @@ export const GET = withAuth(async (request, user) => {
         ) - 
         COALESCE(
           (SELECT SUM(es.amount) FROM expense_splits es JOIN group_expenses e ON es.expense_id = e.id WHERE e.group_id = g.id AND es.user_id = $1), 0
+        ) +
+        COALESCE(
+          (SELECT SUM(amount) FROM settlements WHERE group_id = g.id AND paid_by = $1 AND status = 'completed'), 0
+        ) -
+        COALESCE(
+          (SELECT SUM(amount) FROM settlements WHERE group_id = g.id AND paid_to = $1 AND status = 'completed'), 0
         ) as net_balance
       FROM groups g
       JOIN group_members gm ON g.id = gm.group_id
       WHERE gm.user_id = $1
+        AND g.is_archived = false
       ORDER BY g.created_at DESC
     `, [user.id]);
 

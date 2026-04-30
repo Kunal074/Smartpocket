@@ -11,33 +11,68 @@ async function checkMembership(groupId, userId) {
   return result.rows[0] || null;
 }
 
-// GET /api/settlements?groupId=xxx
-// List settlements for a specific group
+// GET /api/settlements?groupId=xxx  OR  ?userId=xxx  OR  (no params = all for current user)
 export const GET = withAuth(async (request, user) => {
   try {
     const url = new URL(request.url);
     const groupId = url.searchParams.get('groupId');
+    const userId = url.searchParams.get('userId');
 
-    if (!groupId) {
-      return NextResponse.json({ error: 'groupId is required' }, { status: 400 });
+    if (groupId) {
+      const membership = await checkMembership(groupId, user.id);
+      if (!membership) {
+        return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
+      }
+
+      const result = await query(`
+        SELECT 
+          s.*, 
+          payer.name as payer_name, 
+          payee.name as payee_name,
+          COALESCE(g.name, 'Direct') as group_name
+        FROM settlements s
+        JOIN users payer ON s.paid_by = payer.id
+        JOIN users payee ON s.paid_to = payee.id
+        LEFT JOIN groups g ON s.group_id = g.id
+        WHERE s.group_id = $1
+        ORDER BY s.created_at DESC
+      `, [groupId]);
+
+      return NextResponse.json(result.rows);
     }
 
-    const membership = await checkMembership(groupId, user.id);
-    if (!membership) {
-      return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
+    if (userId) {
+      const result = await query(`
+        SELECT 
+          s.*, 
+          payer.name as payer_name, 
+          payee.name as payee_name,
+          COALESCE(g.name, 'Direct') as group_name
+        FROM settlements s
+        JOIN users payer ON s.paid_by = payer.id
+        JOIN users payee ON s.paid_to = payee.id
+        LEFT JOIN groups g ON s.group_id = g.id
+        WHERE (s.paid_by = $1 AND s.paid_to = $2) OR (s.paid_by = $2 AND s.paid_to = $1)
+        ORDER BY s.created_at DESC
+      `, [user.id, userId]);
+
+      return NextResponse.json(result.rows);
     }
 
+    // No params — return ALL settlements involving the current user
     const result = await query(`
       SELECT 
         s.*, 
         payer.name as payer_name, 
-        payee.name as payee_name
+        payee.name as payee_name,
+        COALESCE(g.name, 'Direct') as group_name
       FROM settlements s
       JOIN users payer ON s.paid_by = payer.id
       JOIN users payee ON s.paid_to = payee.id
-      WHERE s.group_id = $1
+      LEFT JOIN groups g ON s.group_id = g.id
+      WHERE s.paid_by = $1 OR s.paid_to = $1
       ORDER BY s.created_at DESC
-    `, [groupId]);
+    `, [user.id]);
 
     return NextResponse.json(result.rows);
 

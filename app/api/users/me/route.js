@@ -7,7 +7,7 @@ import { withAuth } from '@/lib/middleware';
 const getProfile = async (request, user) => {
   try {
     const result = await query(
-      'SELECT id, name, email, upi_id, created_at FROM users WHERE id = $1',
+      'SELECT id, name, email, upi_id, phone, created_at FROM users WHERE id = $1',
       [user.id]
     );
     if (result.rowCount === 0) {

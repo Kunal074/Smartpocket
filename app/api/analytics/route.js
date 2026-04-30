@@ -144,16 +144,44 @@ export const GET = withAuth(async (request, user) => {
       ? Math.round(((currentPeriod - prevPeriod) / prevPeriod) * 100)
       : 0;
 
+    // Fetch budgets for the current month
+    const now = new Date();
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const budgetsResult = await query(
+      `SELECT category_id as category, limit_amount as amount FROM budgets WHERE user_id = $1 AND month = $2`,
+      [user.id, currentMonth]
+    );
+    const budgetsMap = {};
+    budgetsResult.rows.forEach(r => budgetsMap[r.category] = parseFloat(r.amount));
+
+    const byCategoryMap = {};
+    categoryResult.rows.forEach(r => {
+      byCategoryMap[r.category] = {
+        category: r.category,
+        total: parseFloat(r.total),
+        count: parseInt(r.count),
+        budget: budgetsMap[r.category] || null
+      };
+    });
+    // Add categories with budgets but zero spending
+    Object.keys(budgetsMap).forEach(cat => {
+      if (!byCategoryMap[cat]) {
+        byCategoryMap[cat] = {
+          category: cat,
+          total: 0,
+          count: 0,
+          budget: budgetsMap[cat]
+        };
+      }
+    });
+    const byCategoryFinal = Object.values(byCategoryMap).sort((a, b) => b.total - a.total);
+
     return NextResponse.json({
       trends: trendResult.rows.map(r => ({
         label: r.label,
         total: parseFloat(r.total),
       })),
-      byCategory: categoryResult.rows.map(r => ({
-        category: r.category,
-        total: parseFloat(r.total),
-        count: parseInt(r.count),
-      })),
+      byCategory: byCategoryFinal,
       byGroup: groupSpendResult.rows.map(r => ({
         groupId: r.group_id,
         groupName: r.group_name,

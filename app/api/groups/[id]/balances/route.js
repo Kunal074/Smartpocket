@@ -113,9 +113,62 @@ export const GET = withAuth(async (request, user, { params }) => {
       balance: parseFloat(balances[id].toFixed(2))
     }));
 
+    // --- Calculate Raw (Unsimplified) Debts ---
+    const rawMap = {}; // debtor_id -> creditor_id -> amount
+    const rawExpenses = await query(`
+      SELECT ge.paid_by as creditor, es.user_id as debtor, SUM(es.amount) as amount
+      FROM group_expenses ge
+      JOIN expense_splits es ON ge.id = es.expense_id
+      WHERE ge.group_id = $1 AND ge.paid_by != es.user_id
+      GROUP BY ge.paid_by, es.user_id
+    `, [groupId]);
+
+    rawExpenses.rows.forEach(r => {
+      if (!rawMap[r.debtor]) rawMap[r.debtor] = {};
+      rawMap[r.debtor][r.creditor] = (rawMap[r.debtor][r.creditor] || 0) + parseFloat(r.amount);
+    });
+
+    const rawSettlements = await query(`
+      SELECT paid_to as creditor, paid_by as debtor, SUM(amount) as amount
+      FROM settlements
+      WHERE group_id = $1 AND status = 'completed'
+      GROUP BY paid_to, paid_by
+    `, [groupId]);
+
+    rawSettlements.rows.forEach(r => {
+      if (!rawMap[r.debtor]) rawMap[r.debtor] = {};
+      rawMap[r.debtor][r.creditor] = (rawMap[r.debtor][r.creditor] || 0) - parseFloat(r.amount);
+    });
+
+    const rawDebts = [];
+    Object.keys(rawMap).forEach(debtor => {
+      Object.keys(rawMap[debtor]).forEach(creditor => {
+        let net = rawMap[debtor][creditor];
+        if (rawMap[creditor] && rawMap[creditor][debtor]) {
+          net -= rawMap[creditor][debtor];
+          rawMap[creditor][debtor] = 0; // Prevent double processing
+        }
+        
+        if (net > 0.01) {
+          rawDebts.push({
+            from: userMap[debtor],
+            to: userMap[creditor],
+            amount: parseFloat(net.toFixed(2))
+          });
+        } else if (net < -0.01) {
+          rawDebts.push({
+            from: userMap[creditor],
+            to: userMap[debtor],
+            amount: parseFloat(Math.abs(net).toFixed(2))
+          });
+        }
+      });
+    });
+
     return NextResponse.json({
       netBalances,
-      simplifiedDebts: enrichedTransactions
+      simplifiedDebts: enrichedTransactions,
+      rawDebts
     });
 
   } catch (error) {

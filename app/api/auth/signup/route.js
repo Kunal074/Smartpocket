@@ -6,15 +6,18 @@ import { signToken } from '@/lib/auth';
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { name, email, phone, password } = body;
+    const { name, email, phone, password, upi_id = '' } = body;
 
     if (!name || !email || !password || !phone) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Ensure phone column exists
+    // Ensure phone and upi_id columns exist
     try {
-      await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(20) UNIQUE');
+      await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(20)');
+    } catch (e) { /* ignore */ }
+    try {
+      await query('ALTER TABLE users ADD COLUMN IF NOT EXISTS upi_id VARCHAR(100)');
     } catch (e) { /* ignore */ }
 
     // Check if user already exists
@@ -28,8 +31,8 @@ export async function POST(request) {
     const password_hash = await bcrypt.hash(password, salt);
 
     const result = await query(
-      'INSERT INTO users (name, email, phone, password_hash) VALUES ($1, $2, $3, $4) RETURNING id, name, email, phone',
-      [name, email, phone, password_hash]
+      'INSERT INTO users (name, email, phone, upi_id, password_hash) VALUES ($1, $2, $3, $4, $5) RETURNING id, name, email, phone, upi_id',
+      [name, email, phone, upi_id || null, password_hash]
     );
 
     const user = result.rows[0];
