@@ -24,10 +24,29 @@ const deleteHandler = async (request, user, { params }) => {
 const patchHandler = async (request, user, { params }) => {
   try {
     const { id } = params;
-    const { is_active } = await request.json();
+    const body = await request.json();
+    const { is_active, note, amount, category_id, frequency, next_date } = body;
+
+    // Build dynamic SET clause based on what's provided
+    const fields = [];
+    const values = [];
+    let idx = 1;
+
+    if (is_active !== undefined) { fields.push(`is_active = $${idx++}`); values.push(is_active); }
+    if (note !== undefined)      { fields.push(`note = $${idx++}`);      values.push(note); }
+    if (amount !== undefined)    { fields.push(`amount = $${idx++}`);    values.push(parseFloat(amount)); }
+    if (category_id !== undefined) { fields.push(`category_id = $${idx++}`); values.push(category_id); }
+    if (frequency !== undefined) { fields.push(`frequency = $${idx++}`); values.push(frequency); }
+    if (next_date !== undefined) { fields.push(`next_date = $${idx++}`); values.push(next_date); }
+
+    if (fields.length === 0) {
+      return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
+    }
+
+    values.push(id, user.id);
     const result = await query(
-      `UPDATE recurring_expenses SET is_active = $1 WHERE id = $2 AND user_id = $3 RETURNING *`,
-      [is_active, id, user.id]
+      `UPDATE recurring_expenses SET ${fields.join(', ')} WHERE id = $${idx++} AND user_id = $${idx} RETURNING *`,
+      values
     );
     if (result.rowCount === 0) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
