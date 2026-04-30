@@ -1,0 +1,89 @@
+import { NextResponse } from 'next/server';
+import { query } from '@/lib/db';
+import { withAuth } from '@/lib/middleware';
+import Groq from 'groq-sdk';
+
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY,
+});
+
+// GET /api/analytics/insights?month=04&year=2026
+const getHandler = async (request, user) => {
+  try {
+    const { searchParams } = new URL(request.url);
+    const month = searchParams.get('month');
+    const year = searchParams.get('year');
+
+    if (!month || !year) {
+      return NextResponse.json({ error: 'Month and year are required' }, { status: 400 });
+    }
+
+    const startDate = `${year}-${month.padStart(2, '0')}-01`;
+    const endDate = new Date(year, parseInt(month), 0).toISOString().slice(0, 10);
+
+    // Fetch personal expenses
+    const expensesRes = await query(
+      `SELECT amount, category_id as category
+       FROM expenses
+       WHERE user_id = $1 AND date >= $2 AND date <= $3`,
+      [user.id, startDate, endDate]
+    );
+
+    // Fetch user's share of group expenses
+    const groupSharesRes = await query(
+      `SELECT es.amount as amount, 'group_share' as category
+       FROM expense_splits es
+       JOIN group_expenses ge ON es.expense_id = ge.id
+       WHERE es.user_id = $1 AND ge.date >= $2 AND ge.date <= $3 AND es.amount > 0`,
+      [user.id, startDate, endDate]
+    );
+
+    const allData = [...expensesRes.rows, ...groupSharesRes.rows];
+
+    if (allData.length === 0) {
+      return NextResponse.json({ insights: "You don't have any expenses recorded for this month yet. Start logging to get AI-powered insights!" });
+    }
+
+    // Summarize data for the AI to keep tokens low
+    const categoryTotals = {};
+    let totalSpent = 0;
+    for (const item of allData) {
+      const amt = parseFloat(item.amount);
+      totalSpent += amt;
+      const cat = item.category || 'other';
+      categoryTotals[cat] = (categoryTotals[cat] || 0) + amt;
+    }
+
+    const summaryText = `Total Spent: ₹${totalSpent.toFixed(2)}\nCategories:\n` +
+      Object.entries(categoryTotals).map(([c, amt]) => `- ${c}: ₹${amt.toFixed(2)}`).join('\n');
+
+    const prompt = `
+You are an expert personal finance assistant inside the "SmartPocket" app.
+Analyze the following monthly spending summary for an Indian user and provide 3-4 bullet points of highly personalized, actionable advice. 
+Keep it concise, friendly, and practical. Use emojis. Do not use markdown headers, just bullet points.
+
+User's Spending Data for ${month}/${year}:
+${summaryText}
+`;
+
+    const chatCompletion = await groq.chat.completions.create({
+      messages: [
+        { role: 'system', content: 'You are a concise financial advisor.' },
+        { role: 'user', content: prompt }
+      ],
+      model: 'llama3-8b-8192',
+      temperature: 0.6,
+      max_tokens: 300,
+    });
+
+    const insights = chatCompletion.choices[0]?.message?.content || "Keep up the good work managing your finances!";
+
+    return NextResponse.json({ insights }, { status: 200 });
+
+  } catch (error) {
+    console.error('Insights Error:', error);
+    return NextResponse.json({ error: 'Failed to generate insights' }, { status: 500 });
+  }
+};
+
+export const GET = withAuth(getHandler);

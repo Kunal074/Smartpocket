@@ -8,15 +8,17 @@ const getHandler = async (request, user) => {
     const { searchParams } = new URL(request.url);
     const month = searchParams.get('month');
     const year = searchParams.get('year');
+    let startDate = searchParams.get('startDate');
+    let endDate = searchParams.get('endDate');
 
-    if (!month || !year) {
-      return NextResponse.json({ error: 'Month and year are required' }, { status: 400 });
+    if (!startDate || !endDate) {
+      if (month && year) {
+        startDate = `${year}-${month.padStart(2, '0')}-01`;
+        endDate = new Date(year, parseInt(month), 0).toISOString().slice(0, 10);
+      } else {
+        return NextResponse.json({ error: 'Date range (startDate & endDate) is required' }, { status: 400 });
+      }
     }
-
-    // Build date range
-    const startDate = `${year}-${month.padStart(2, '0')}-01`;
-    // Get last day of the month
-    const endDate = new Date(year, parseInt(month), 0).toISOString().slice(0, 10);
 
     // Fetch personal expenses
     const expensesRes = await query(
@@ -27,13 +29,11 @@ const getHandler = async (request, user) => {
       [user.id, startDate, endDate]
     );
 
-    // Fetch smartsplit expenses (where user paid for others, or user's share in a group)
-    // To keep it simple, let's just fetch the user's personal expenses and their share of group expenses
     const groupSharesRes = await query(
-      `SELECT ge.id, (ge.amount / ge.split_among) as amount, ge.description as note, ge.date, 'group_share' as category, 'expense' as type
-       FROM group_expenses ge
-       JOIN group_members gm ON ge.group_id = gm.group_id
-       WHERE gm.user_id = $1 AND ge.date >= $2 AND ge.date <= $3
+      `SELECT ge.id, es.amount as amount, ge.title as note, ge.date, 'group_share' as category, 'expense' as type
+       FROM expense_splits es
+       JOIN group_expenses ge ON es.expense_id = ge.id
+       WHERE es.user_id = $1 AND ge.date >= $2 AND ge.date <= $3 AND es.amount > 0
        ORDER BY ge.date DESC`,
       [user.id, startDate, endDate]
     );
