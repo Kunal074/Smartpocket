@@ -12,6 +12,7 @@ const getHandler = async (request, user) => {
     const { searchParams } = new URL(request.url);
     const month = searchParams.get('month');
     const year = searchParams.get('year');
+    const lang = searchParams.get('lang') || 'en'; // 'en', 'hi', or 'hinglish'
 
     if (!month || !year) {
       return NextResponse.json({ error: 'Month and year are required' }, { status: 400 });
@@ -56,10 +57,18 @@ const getHandler = async (request, user) => {
     const summaryText = `Total Spent: ₹${totalSpent.toFixed(2)}\nCategories:\n` +
       Object.entries(categoryTotals).map(([c, amt]) => `- ${c}: ₹${amt.toFixed(2)}`).join('\n');
 
+    const langInstruction = 
+      lang === 'hi'
+        ? 'IMPORTANT: Respond ONLY in Hindi (Devanagari script). Do not use English at all.'
+        : lang === 'hinglish'
+        ? 'IMPORTANT: Respond in Hinglish (a fun mix of Hindi and English spoken by Indian youth, e.g., "Bhai, tune food pe bohot zyada kharcha kar diya!"). Be casual and friendly.'
+        : 'Respond in clear, simple English.';
+
     const prompt = `
 You are an expert personal finance assistant inside the "SmartPocket" app.
-Analyze the following monthly spending summary for an Indian user and provide 3-4 bullet points of highly personalized, actionable advice. 
-Keep it concise, friendly, and practical. Use emojis. Do not use markdown headers, just bullet points.
+${langInstruction}
+Analyze the following monthly spending summary for an Indian user and provide 3-4 bullet points of highly personalized, actionable advice.
+Keep it concise and practical. Use emojis. Do not use markdown headers, just bullet points.
 
 User's Spending Data for ${month}/${year}:
 ${summaryText}
