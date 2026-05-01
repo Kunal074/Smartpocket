@@ -2,10 +2,27 @@ import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withAuth } from '@/lib/middleware';
 
+// Ensure personal_bills table exists
+async function ensureTable() {
+  await query(`
+    CREATE TABLE IF NOT EXISTS personal_bills (
+      id SERIAL PRIMARY KEY,
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      title VARCHAR(255) NOT NULL,
+      amount DECIMAL(12,2) NOT NULL,
+      category VARCHAR(50) DEFAULT 'other',
+      note TEXT DEFAULT '',
+      date DATE DEFAULT CURRENT_DATE,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
+}
+
 // GET /api/analytics
 // Returns spending breakdowns for the current user
 export const GET = withAuth(async (request, user) => {
   try {
+    await ensureTable();
     const url = new URL(request.url);
     const timeframe = url.searchParams.get('timeframe') || 'month';
     const customStart = url.searchParams.get('startDate'); // YYYY-MM-DD
@@ -23,6 +40,8 @@ export const GET = withAuth(async (request, user) => {
       trendQuery = `
         WITH combined AS (
           SELECT date, amount FROM expenses WHERE user_id = $1
+          UNION ALL
+          SELECT date, amount FROM personal_bills WHERE user_id = $1
           UNION ALL
           SELECT ge.date, es.amount FROM expense_splits es JOIN group_expenses ge ON es.expense_id = ge.id WHERE es.user_id = $1
           UNION ALL
@@ -42,6 +61,8 @@ export const GET = withAuth(async (request, user) => {
         WITH combined AS (
           SELECT date, amount FROM expenses WHERE user_id = $1
           UNION ALL
+          SELECT date, amount FROM personal_bills WHERE user_id = $1
+          UNION ALL
           SELECT ge.date, es.amount FROM expense_splits es JOIN group_expenses ge ON es.expense_id = ge.id WHERE es.user_id = $1
           UNION ALL
           SELECT ge.date, es.amount FROM expense_splits es JOIN group_expenses ge ON es.expense_id = ge.id WHERE ge.group_id IS NULL AND ge.paid_by = $1 AND es.user_id != $1
@@ -59,6 +80,8 @@ export const GET = withAuth(async (request, user) => {
       trendQuery = `
         WITH combined AS (
           SELECT date, amount FROM expenses WHERE user_id = $1
+          UNION ALL
+          SELECT date, amount FROM personal_bills WHERE user_id = $1
           UNION ALL
           SELECT ge.date, es.amount FROM expense_splits es JOIN group_expenses ge ON es.expense_id = ge.id WHERE es.user_id = $1
           UNION ALL
@@ -84,6 +107,8 @@ export const GET = withAuth(async (request, user) => {
     const categoryResult = await query(`
       WITH combined AS (
         SELECT category_id as category, amount, date FROM expenses WHERE user_id = $1
+        UNION ALL
+        SELECT category, amount, date FROM personal_bills WHERE user_id = $1
         UNION ALL
         SELECT category, es.amount, ge.date FROM expense_splits es JOIN group_expenses ge ON es.expense_id = ge.id WHERE es.user_id = $1
         UNION ALL
@@ -120,6 +145,7 @@ export const GET = withAuth(async (request, user) => {
 
     // 4. Comparison vs previous period
     let comparisonResult;
+    let compQuery = '';
     if (isCustom) {
       // For custom range: compare against an equal preceding period
       const startMs = new Date(customStart).getTime();
@@ -128,7 +154,7 @@ export const GET = withAuth(async (request, user) => {
       const prevStart = new Date(startMs - diffMs - 86400000).toISOString().slice(0, 10);
       const prevEnd = new Date(startMs - 86400000).toISOString().slice(0, 10);
       comparisonResult = await query(`
-        WITH combined AS (SELECT amount, date FROM expenses WHERE user_id = $1 UNION ALL SELECT es.amount, ge.date FROM expense_splits es JOIN group_expenses ge ON es.expense_id = ge.id WHERE es.user_id = $1 UNION ALL SELECT es.amount, ge.date FROM expense_splits es JOIN group_expenses ge ON es.expense_id = ge.id WHERE ge.group_id IS NULL AND ge.paid_by = $1 AND es.user_id != $1)
+        WITH combined AS (SELECT amount, date FROM expenses WHERE user_id = $1 UNION ALL SELECT amount, date FROM personal_bills WHERE user_id = $1 UNION ALL SELECT es.amount, ge.date FROM expense_splits es JOIN group_expenses ge ON es.expense_id = ge.id WHERE es.user_id = $1 UNION ALL SELECT es.amount, ge.date FROM expense_splits es JOIN group_expenses ge ON es.expense_id = ge.id WHERE ge.group_id IS NULL AND ge.paid_by = $1 AND es.user_id != $1)
         SELECT
           SUM(CASE WHEN date >= $2 AND date <= $3 THEN amount ELSE 0 END) as current_period,
           SUM(CASE WHEN date >= $4 AND date <= $5 THEN amount ELSE 0 END) as prev_period
@@ -136,7 +162,7 @@ export const GET = withAuth(async (request, user) => {
       `, [user.id, customStart, customEnd, prevStart, prevEnd]);
     } else if (timeframe === 'week') {
       compQuery = `
-        WITH combined AS (SELECT amount, date FROM expenses WHERE user_id = $1 UNION ALL SELECT es.amount, ge.date FROM expense_splits es JOIN group_expenses ge ON es.expense_id = ge.id WHERE es.user_id = $1 UNION ALL SELECT es.amount, ge.date FROM expense_splits es JOIN group_expenses ge ON es.expense_id = ge.id WHERE ge.group_id IS NULL AND ge.paid_by = $1 AND es.user_id != $1)
+        WITH combined AS (SELECT amount, date FROM expenses WHERE user_id = $1 UNION ALL SELECT amount, date FROM personal_bills WHERE user_id = $1 UNION ALL SELECT es.amount, ge.date FROM expense_splits es JOIN group_expenses ge ON es.expense_id = ge.id WHERE es.user_id = $1 UNION ALL SELECT es.amount, ge.date FROM expense_splits es JOIN group_expenses ge ON es.expense_id = ge.id WHERE ge.group_id IS NULL AND ge.paid_by = $1 AND es.user_id != $1)
         SELECT
           SUM(CASE WHEN date >= NOW() - INTERVAL '7 days' THEN amount ELSE 0 END) as current_period,
           SUM(CASE WHEN date >= NOW() - INTERVAL '14 days' AND date < NOW() - INTERVAL '7 days' THEN amount ELSE 0 END) as prev_period
@@ -144,7 +170,7 @@ export const GET = withAuth(async (request, user) => {
       `;
     } else if (timeframe === 'month') {
       compQuery = `
-        WITH combined AS (SELECT amount, date FROM expenses WHERE user_id = $1 UNION ALL SELECT es.amount, ge.date FROM expense_splits es JOIN group_expenses ge ON es.expense_id = ge.id WHERE es.user_id = $1 UNION ALL SELECT es.amount, ge.date FROM expense_splits es JOIN group_expenses ge ON es.expense_id = ge.id WHERE ge.group_id IS NULL AND ge.paid_by = $1 AND es.user_id != $1)
+        WITH combined AS (SELECT amount, date FROM expenses WHERE user_id = $1 UNION ALL SELECT amount, date FROM personal_bills WHERE user_id = $1 UNION ALL SELECT es.amount, ge.date FROM expense_splits es JOIN group_expenses ge ON es.expense_id = ge.id WHERE es.user_id = $1 UNION ALL SELECT es.amount, ge.date FROM expense_splits es JOIN group_expenses ge ON es.expense_id = ge.id WHERE ge.group_id IS NULL AND ge.paid_by = $1 AND es.user_id != $1)
         SELECT
           SUM(CASE WHEN date >= date_trunc('month', NOW()) THEN amount ELSE 0 END) as current_period,
           SUM(CASE WHEN date >= date_trunc('month', NOW()) - INTERVAL '1 month' AND date < date_trunc('month', NOW()) THEN amount ELSE 0 END) as prev_period
@@ -152,7 +178,7 @@ export const GET = withAuth(async (request, user) => {
       `;
     } else {
       compQuery = `
-        WITH combined AS (SELECT amount, date FROM expenses WHERE user_id = $1 UNION ALL SELECT es.amount, ge.date FROM expense_splits es JOIN group_expenses ge ON es.expense_id = ge.id WHERE es.user_id = $1 UNION ALL SELECT es.amount, ge.date FROM expense_splits es JOIN group_expenses ge ON es.expense_id = ge.id WHERE ge.group_id IS NULL AND ge.paid_by = $1 AND es.user_id != $1)
+        WITH combined AS (SELECT amount, date FROM expenses WHERE user_id = $1 UNION ALL SELECT amount, date FROM personal_bills WHERE user_id = $1 UNION ALL SELECT es.amount, ge.date FROM expense_splits es JOIN group_expenses ge ON es.expense_id = ge.id WHERE es.user_id = $1 UNION ALL SELECT es.amount, ge.date FROM expense_splits es JOIN group_expenses ge ON es.expense_id = ge.id WHERE ge.group_id IS NULL AND ge.paid_by = $1 AND es.user_id != $1)
         SELECT
           SUM(CASE WHEN date >= date_trunc('year', NOW()) THEN amount ELSE 0 END) as current_period,
           SUM(CASE WHEN date >= date_trunc('year', NOW()) - INTERVAL '1 year' AND date < date_trunc('year', NOW()) THEN amount ELSE 0 END) as prev_period

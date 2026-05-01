@@ -2,20 +2,37 @@ import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { withAuth } from '@/lib/middleware';
 
+// Ensure personal_bills table exists
+async function ensureTable() {
+  await query(`
+    CREATE TABLE IF NOT EXISTS personal_bills (
+      id SERIAL PRIMARY KEY,
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      title VARCHAR(255) NOT NULL,
+      amount DECIMAL(12,2) NOT NULL,
+      category VARCHAR(50) DEFAULT 'other',
+      note TEXT DEFAULT '',
+      date DATE DEFAULT CURRENT_DATE,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
+}
+
 // GET all expenses for the current user (Combined personal + group splits)
 const getHandler = async (request, user) => {
   try {
+    await ensureTable();
     const result = await query(
       `SELECT 
-        id, 
+        id::TEXT, 
         amount, 
         category_id as "categoryId", 
         date, 
         note, 
         created_at,
         'personal' as type,
-        NULL as with_user,
-        NULL as "groupId",
+        NULL::TEXT as with_user,
+        NULL::UUID as "groupId",
         user_id as paid_by
       FROM expenses 
       WHERE user_id = $1
@@ -23,7 +40,23 @@ const getHandler = async (request, user) => {
       UNION ALL
 
       SELECT 
-        ge.id, 
+        id::TEXT, 
+        amount, 
+        category as "categoryId", 
+        date, 
+        title as note, 
+        created_at,
+        'personal' as type,
+        NULL::TEXT as with_user,
+        NULL::UUID as "groupId",
+        user_id as paid_by
+      FROM personal_bills 
+      WHERE user_id = $1
+
+      UNION ALL
+
+      SELECT 
+        ge.id::TEXT, 
         es.amount, 
         ge.category as "categoryId", 
         ge.date, 
@@ -41,7 +74,7 @@ const getHandler = async (request, user) => {
       UNION ALL
 
       SELECT 
-        ge.id, 
+        ge.id::TEXT, 
         es.amount, 
         ge.category as "categoryId", 
         ge.date, 
@@ -62,11 +95,18 @@ const getHandler = async (request, user) => {
     );
 
     // Convert date string to ISO format for frontend consistency
-    const expenses = result.rows.map(row => ({
-      ...row,
-      amount: parseFloat(row.amount),
-      date: row.date ? new Date(row.date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10), // Return YYYY-MM-DD
-    }));
+    const expenses = result.rows.map(row => {
+      const dateObj = row.date ? new Date(row.date) : new Date();
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      
+      return {
+        ...row,
+        amount: parseFloat(row.amount),
+        date: `${year}-${month}-${day}`, // Prevent timezone shift from toISOString()
+      };
+    });
 
     return NextResponse.json({ expenses }, { status: 200 });
   } catch (error) {

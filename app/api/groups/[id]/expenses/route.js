@@ -47,11 +47,18 @@ export const GET = withAuth(async (request, user, { params }) => {
       });
     }
 
-    // Attach splits to each expense
-    const expensesWithSplits = expensesResult.rows.map(e => ({
-      ...e,
-      splits: splitsMap[e.id] || []
-    }));
+    // Attach splits to each expense and format date properly
+    const expensesWithSplits = expensesResult.rows.map(e => {
+      const dateObj = e.date ? new Date(e.date) : new Date();
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      return {
+        ...e,
+        date: `${year}-${month}-${day}`, // Prevent timezone shift from toISOString()
+        splits: splitsMap[e.id] || []
+      };
+    });
 
     return NextResponse.json(expensesWithSplits);
 

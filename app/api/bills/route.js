@@ -7,7 +7,7 @@ async function ensureTable() {
   await query(`
     CREATE TABLE IF NOT EXISTS personal_bills (
       id SERIAL PRIMARY KEY,
-      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       title VARCHAR(255) NOT NULL,
       amount DECIMAL(12,2) NOT NULL,
       category VARCHAR(50) DEFAULT 'other',
@@ -26,7 +26,17 @@ export const GET = withAuth(async (request, user) => {
       'SELECT * FROM personal_bills WHERE user_id = $1 ORDER BY date DESC, created_at DESC',
       [user.id]
     );
-    return NextResponse.json(result.rows);
+    const bills = result.rows.map(row => {
+      const dateObj = row.date ? new Date(row.date) : new Date();
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      return {
+        ...row,
+        date: `${year}-${month}-${day}`
+      };
+    });
+    return NextResponse.json(bills);
   } catch (error) {
     console.error('Error fetching personal bills:', error);
     return NextResponse.json({ error: 'Failed to fetch bills' }, { status: 500 });
