@@ -12,14 +12,24 @@ const getHandler = async (request, user) => {
     const { searchParams } = new URL(request.url);
     const month = searchParams.get('month');
     const year = searchParams.get('year');
-    const lang = searchParams.get('lang') || 'en'; // 'en', 'hi', or 'hinglish'
+    const lang = searchParams.get('lang') || 'en';
+    const customStart = searchParams.get('startDate'); // YYYY-MM-DD
+    const customEnd = searchParams.get('endDate');     // YYYY-MM-DD
+    const isCustom = !!(customStart && customEnd);
 
-    if (!month || !year) {
-      return NextResponse.json({ error: 'Month and year are required' }, { status: 400 });
+    let startDate, endDate, periodLabel;
+    if (isCustom) {
+      startDate = customStart;
+      endDate = customEnd;
+      periodLabel = `${customStart} to ${customEnd}`;
+    } else {
+      if (!month || !year) {
+        return NextResponse.json({ error: 'Month and year are required' }, { status: 400 });
+      }
+      startDate = `${year}-${month.padStart(2, '0')}-01`;
+      endDate = new Date(year, parseInt(month), 0).toISOString().slice(0, 10);
+      periodLabel = `${month}/${year}`;
     }
-
-    const startDate = `${year}-${month.padStart(2, '0')}-01`;
-    const endDate = new Date(year, parseInt(month), 0).toISOString().slice(0, 10);
 
     // Fetch personal expenses
     const expensesRes = await query(
@@ -67,10 +77,10 @@ const getHandler = async (request, user) => {
     const prompt = `
 You are an expert personal finance assistant inside the "SmartPocket" app.
 ${langInstruction}
-Analyze the following monthly spending summary for an Indian user and provide 3-4 bullet points of highly personalized, actionable advice.
+Analyze the following spending summary for an Indian user (period: ${periodLabel}) and provide 3-4 bullet points of highly personalized, actionable advice.
 Keep it concise and practical. Use emojis. Do not use markdown headers, just bullet points.
 
-User's Spending Data for ${month}/${year}:
+User's Spending Data (${periodLabel}):
 ${summaryText}
 `;
 

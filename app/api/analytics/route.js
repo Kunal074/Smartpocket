@@ -7,7 +7,10 @@ import { withAuth } from '@/lib/middleware';
 export const GET = withAuth(async (request, user) => {
   try {
     const url = new URL(request.url);
-    const timeframe = url.searchParams.get('timeframe') || 'month'; // week | month | year
+    const timeframe = url.searchParams.get('timeframe') || 'month';
+    const customStart = url.searchParams.get('startDate'); // YYYY-MM-DD
+    const customEnd = url.searchParams.get('endDate');     // YYYY-MM-DD
+    const isCustom = !!(customStart && customEnd);
 
     let interval = '1 month';
     if (timeframe === 'week') interval = '1 week';
@@ -74,6 +77,10 @@ export const GET = withAuth(async (request, user) => {
     const trendResult = await query(trendQuery, [user.id]);
 
     // 2. Spending by category (Unified)
+    const catParams = isCustom ? [user.id, customStart, customEnd] : [user.id];
+    const catDateFilter = isCustom
+      ? `AND date >= $2 AND date <= $3`
+      : `AND date >= NOW() - INTERVAL '${interval}'`;
     const categoryResult = await query(`
       WITH combined AS (
         SELECT category_id as category, amount, date FROM expenses WHERE user_id = $1
@@ -87,12 +94,15 @@ export const GET = withAuth(async (request, user) => {
         SUM(amount) as total,
         COUNT(*) as count
       FROM combined
-      WHERE date >= NOW() - INTERVAL '${interval}'
+      WHERE 1=1 ${catDateFilter}
       GROUP BY category
       ORDER BY total DESC
-    `, [user.id]);
+    `, catParams);
 
     // 3. Group spending total
+    const grpDateFilter = isCustom
+      ? `AND ge.date >= '${customStart}' AND ge.date <= '${customEnd}'`
+      : `AND ge.date >= NOW() - INTERVAL '${interval}'`;
     const groupSpendResult = await query(`
       SELECT
         g.name as group_name,
@@ -102,15 +112,29 @@ export const GET = withAuth(async (request, user) => {
       JOIN group_expenses ge ON es.expense_id = ge.id
       JOIN groups g ON ge.group_id = g.id
       WHERE es.user_id = $1
-        AND ge.date >= NOW() - INTERVAL '${interval}'
+        ${grpDateFilter}
       GROUP BY g.id, g.name
       ORDER BY total DESC
       LIMIT 5
     `, [user.id]);
 
     // 4. Comparison vs previous period
-    let compQuery = '';
-    if (timeframe === 'week') {
+    let comparisonResult;
+    if (isCustom) {
+      // For custom range: compare against an equal preceding period
+      const startMs = new Date(customStart).getTime();
+      const endMs = new Date(customEnd).getTime();
+      const diffMs = endMs - startMs;
+      const prevStart = new Date(startMs - diffMs - 86400000).toISOString().slice(0, 10);
+      const prevEnd = new Date(startMs - 86400000).toISOString().slice(0, 10);
+      comparisonResult = await query(`
+        WITH combined AS (SELECT amount, date FROM expenses WHERE user_id = $1 UNION ALL SELECT es.amount, ge.date FROM expense_splits es JOIN group_expenses ge ON es.expense_id = ge.id WHERE es.user_id = $1 UNION ALL SELECT es.amount, ge.date FROM expense_splits es JOIN group_expenses ge ON es.expense_id = ge.id WHERE ge.group_id IS NULL AND ge.paid_by = $1 AND es.user_id != $1)
+        SELECT
+          SUM(CASE WHEN date >= $2 AND date <= $3 THEN amount ELSE 0 END) as current_period,
+          SUM(CASE WHEN date >= $4 AND date <= $5 THEN amount ELSE 0 END) as prev_period
+        FROM combined
+      `, [user.id, customStart, customEnd, prevStart, prevEnd]);
+    } else if (timeframe === 'week') {
       compQuery = `
         WITH combined AS (SELECT amount, date FROM expenses WHERE user_id = $1 UNION ALL SELECT es.amount, ge.date FROM expense_splits es JOIN group_expenses ge ON es.expense_id = ge.id WHERE es.user_id = $1 UNION ALL SELECT es.amount, ge.date FROM expense_splits es JOIN group_expenses ge ON es.expense_id = ge.id WHERE ge.group_id IS NULL AND ge.paid_by = $1 AND es.user_id != $1)
         SELECT
@@ -136,7 +160,7 @@ export const GET = withAuth(async (request, user) => {
       `;
     }
 
-    const comparisonResult = await query(compQuery, [user.id]);
+    if (!isCustom) comparisonResult = await query(compQuery, [user.id]);
     const comparison = comparisonResult.rows[0];
     const currentPeriod = parseFloat(comparison.current_period || 0);
     const prevPeriod = parseFloat(comparison.prev_period || 0);
