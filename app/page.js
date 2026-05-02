@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRef } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
   ArrowRight,
   BarChart3,
@@ -16,6 +17,10 @@ import {
   Download,
   Users
 } from 'lucide-react';
+
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger);
+}
 
 export default function Landing() {
   const container = useRef(null);
