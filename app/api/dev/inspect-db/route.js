@@ -3,23 +3,33 @@ import { query } from '@/lib/db';
 
 export async function GET() {
   try {
-    // Check if recurring_expenses table exists
-    const tableCheck = await query(`
-      SELECT table_name FROM information_schema.tables 
-      WHERE table_schema = 'public' AND table_name = 'recurring_expenses'
-    `);
-    
-    // Also check users.id type
-    const usersIdType = await query(`
-      SELECT column_name, data_type, udt_name 
-      FROM information_schema.columns 
-      WHERE table_name = 'users' AND column_name = 'id'
+    // List all public tables
+    const tablesResult = await query(`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public' 
+      ORDER BY table_name
     `);
 
-    return NextResponse.json({ 
-      recurring_table_exists: tableCheck.rowCount > 0,
-      users_id_type: usersIdType.rows[0] || null
+    const tables = tablesResult.rows.map(r => r.table_name);
+
+    // Get row count for each table
+    const counts = {};
+    for (const table of tables) {
+      try {
+        const countResult = await query(`SELECT COUNT(*) FROM "${table}"`);
+        counts[table] = parseInt(countResult.rows[0].count);
+      } catch {
+        counts[table] = 'error';
+      }
+    }
+
+    return NextResponse.json({
+      total_tables: tables.length,
+      tables: counts,
+      status: tables.length >= 10 ? '✅ All tables ready!' : '⚠️ Some tables may be missing'
     });
+
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
