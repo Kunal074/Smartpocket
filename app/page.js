@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRef } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
   ArrowRight,
   BarChart3,
@@ -17,11 +18,15 @@ import {
   Users
 } from 'lucide-react';
 
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger);
+}
+
 export default function Landing() {
   const container = useRef(null);
 
   useGSAP(() => {
-    // Hero Animations (Only Hero section, cards are excluded to be safe)
+    // Hero Animations
     const tl = gsap.timeline();
     
     tl.from('.hero-badge', { y: 20, opacity: 0, duration: 0.6, ease: 'power3.out' })
@@ -30,6 +35,32 @@ export default function Landing() {
       .from('.hero-buttons', { y: 20, opacity: 0, duration: 0.6, ease: 'power3.out' }, '-=0.4')
       .from('.hero-features', { y: 10, opacity: 0, duration: 0.6, ease: 'power3.out' }, '-=0.4')
       .from('.hero-card', { x: 40, opacity: 0, duration: 1, ease: 'power4.out' }, '-=1');
+
+    // Showcase Section Animation
+    gsap.from('#showcase > div > div', {
+      scrollTrigger: {
+        trigger: '#showcase',
+        start: 'top 75%',
+      },
+      y: 40,
+      opacity: 0,
+      duration: 0.8,
+      stagger: 0.2,
+      ease: 'power3.out'
+    });
+
+    // CTA Section Animation
+    gsap.from('#cta-container', {
+      scrollTrigger: {
+        trigger: '#cta-container',
+        start: 'top 80%',
+      },
+      y: 40,
+      opacity: 0,
+      duration: 0.8,
+      ease: 'power3.out'
+    });
+
   }, { scope: container });
 
   return (
@@ -311,7 +342,7 @@ function Mini({ emoji, label, amt }) {
 
 function CTA() {
   return (
-    <section className="border-t border-border/40 px-4 py-24 sm:px-6">
+    <section id="cta-container" className="border-t border-border/40 px-4 py-24 sm:px-6">
       <div className="glass-strong mx-auto max-w-4xl rounded-3xl p-10 text-center sm:p-14 shadow-2xl">
         <h2 className="font-display text-4xl font-bold tracking-tight sm:text-5xl">
           Start tracking in <span className="text-gradient">10 seconds</span>.
