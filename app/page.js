@@ -1,9 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { useRef } from 'react';
-import gsap from 'gsap';
-import { useGSAP } from '@gsap/react';
 import {
   ArrowRight,
   BarChart3,
@@ -18,24 +15,8 @@ import {
 } from 'lucide-react';
 
 export default function Landing() {
-  const container = useRef(null);
-
-  useGSAP(() => {
-    // Hero Animations
-    const tl = gsap.timeline();
-    
-    tl.from('.hero-badge', { y: 20, opacity: 0, duration: 0.6, ease: 'power3.out' })
-      .from('.hero-title', { y: 30, opacity: 0, duration: 0.8, ease: 'power3.out' }, '-=0.4')
-      .from('.hero-subtitle', { y: 20, opacity: 0, duration: 0.6, ease: 'power3.out' }, '-=0.6')
-      .from('.hero-buttons', { y: 20, opacity: 0, duration: 0.6, ease: 'power3.out' }, '-=0.4')
-      .from('.hero-features', { y: 10, opacity: 0, duration: 0.6, ease: 'power3.out' }, '-=0.4')
-      .from('.hero-card', { x: 40, opacity: 0, duration: 1, ease: 'power4.out' }, '-=1')
-      .from('.feature-card', { y: 40, opacity: 0, duration: 0.8, stagger: 0.1, ease: 'back.out(1.2)' }, '-=0.5');
-
-  }, { scope: container });
-
   return (
-    <div className="min-h-screen" ref={container}>
+    <div className="min-h-screen">
       <Header />
       <Hero />
       <Features />
