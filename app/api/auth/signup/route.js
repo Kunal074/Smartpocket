@@ -6,11 +6,28 @@ import { signToken } from '@/lib/auth';
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { name, email, phone, password, upi_id = '' } = body;
+    const { name, email, phone, password, upi_id = '', otp } = body;
 
     if (!name || !email || !password || !phone) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
+
+    if (!otp) {
+      return NextResponse.json({ error: 'OTP is required for verification' }, { status: 400 });
+    }
+
+    // Verify OTP
+    const otpResult = await query(
+      'SELECT * FROM email_otps WHERE email = $1 AND otp = $2 AND expires_at > NOW()',
+      [email, otp]
+    );
+
+    if (otpResult.rowCount === 0) {
+      return NextResponse.json({ error: 'Invalid or expired OTP. Please try again.' }, { status: 400 });
+    }
+
+    // Delete used OTP
+    await query('DELETE FROM email_otps WHERE email = $1', [email]);
 
     // Ensure phone and upi_id columns exist
     try {
@@ -44,3 +61,4 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
+
