@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useRef } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
   ArrowRight,
   BarChart3,
@@ -18,10 +17,6 @@ import {
   Users
 } from 'lucide-react';
 
-if (typeof window !== 'undefined') {
-  gsap.registerPlugin(ScrollTrigger);
-}
-
 export default function Landing() {
   const container = useRef(null);
 
@@ -34,20 +29,8 @@ export default function Landing() {
       .from('.hero-subtitle', { y: 20, opacity: 0, duration: 0.6, ease: 'power3.out' }, '-=0.6')
       .from('.hero-buttons', { y: 20, opacity: 0, duration: 0.6, ease: 'power3.out' }, '-=0.4')
       .from('.hero-features', { y: 10, opacity: 0, duration: 0.6, ease: 'power3.out' }, '-=0.4')
-      .from('.hero-card', { x: 40, opacity: 0, duration: 1, ease: 'power4.out' }, '-=1');
-
-    // Scroll Animations for Features
-    gsap.from('.feature-card', {
-      scrollTrigger: {
-        trigger: '#features',
-        start: 'top 70%'
-      },
-      y: 40,
-      opacity: 0,
-      duration: 0.8,
-      stagger: 0.1,
-      ease: 'back.out(1.2)'
-    });
+      .from('.hero-card', { x: 40, opacity: 0, duration: 1, ease: 'power4.out' }, '-=1')
+      .from('.feature-card', { y: 40, opacity: 0, duration: 0.8, stagger: 0.1, ease: 'back.out(1.2)' }, '-=0.5');
 
   }, { scope: container });
 
