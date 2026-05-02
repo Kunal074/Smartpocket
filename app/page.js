@@ -13,7 +13,8 @@ import {
   Sparkles,
   Wallet,
   Zap,
-  Download
+  Download,
+  Users
 } from 'lucide-react';
 
 export default function Landing() {
