@@ -1,4 +1,9 @@
+'use client';
+
 import Link from 'next/link';
+import { useRef } from 'react';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 import {
   ArrowRight,
   BarChart3,
@@ -8,11 +13,40 @@ import {
   Sparkles,
   Wallet,
   Zap,
+  Download
 } from 'lucide-react';
 
 export default function Landing() {
+  const container = useRef(null);
+
+  useGSAP(() => {
+    // Hero Animations
+    const tl = gsap.timeline();
+    
+    tl.from('.hero-badge', { y: 20, opacity: 0, duration: 0.6, ease: 'power3.out' })
+      .from('.hero-title', { y: 30, opacity: 0, duration: 0.8, ease: 'power3.out' }, '-=0.4')
+      .from('.hero-subtitle', { y: 20, opacity: 0, duration: 0.6, ease: 'power3.out' }, '-=0.6')
+      .from('.hero-buttons', { y: 20, opacity: 0, duration: 0.6, ease: 'power3.out' }, '-=0.4')
+      .from('.hero-features', { y: 10, opacity: 0, duration: 0.6, ease: 'power3.out' }, '-=0.4')
+      .from('.hero-card', { x: 40, opacity: 0, duration: 1, ease: 'power4.out' }, '-=1');
+
+    // Scroll Animations for Features
+    gsap.from('.feature-card', {
+      scrollTrigger: {
+        trigger: '#features',
+        start: 'top 70%'
+      },
+      y: 40,
+      opacity: 0,
+      duration: 0.8,
+      stagger: 0.1,
+      ease: 'back.out(1.2)'
+    });
+
+  }, { scope: container });
+
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen" ref={container}>
       <Header />
       <Hero />
       <Features />
@@ -44,18 +78,13 @@ function Header() {
           </a>
         </nav>
         <div className="flex items-center gap-2">
-          <Link
-            href="/login"
-            className="hidden rounded-full px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground sm:inline-flex"
+          <a
+            href="/SmartPocket.apk"
+            download
+            className="inline-flex items-center gap-2 rounded-full gradient-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-95"
           >
-            Sign in
-          </Link>
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center gap-1 rounded-full gradient-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-95"
-          >
-            Try as Guest <ArrowRight className="h-4 w-4" />
-          </Link>
+            <Download className="h-4 w-4" /> Download App
+          </a>
         </div>
       </div>
     </header>
@@ -67,36 +96,30 @@ function Hero() {
     <section className="relative overflow-hidden">
       <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-20 sm:px-6 lg:grid-cols-2 lg:py-28">
         <div className="space-y-7">
-          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card/50 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur">
+          <div className="hero-badge inline-flex items-center gap-2 rounded-full border border-border bg-card/50 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur">
             <Sparkles className="h-3.5 w-3.5 text-primary" />
             Built for Indian wallets — ₹ first
           </div>
-          <h1 className="font-display text-5xl font-bold leading-[1.05] tracking-tight sm:text-6xl">
+          <h1 className="hero-title font-display text-5xl font-bold leading-[1.05] tracking-tight sm:text-6xl">
             Track every <span className="text-gradient">₹</span>,
             <br /> save smarter.
           </h1>
-          <p className="max-w-lg text-lg leading-relaxed text-muted-foreground">
+          <p className="hero-subtitle max-w-lg text-lg leading-relaxed text-muted-foreground">
             SmartPocket is a beautifully simple expense tracker. Add a chai in 3
-            taps, set category budgets, and watch your savings grow — no setup,
-            no signup needed.
+            taps, set category budgets, and split bills seamlessly — directly from your Android phone.
           </p>
-          <div className="flex flex-wrap items-center gap-3">
-            <Link
-              href="/dashboard"
+          <div className="hero-buttons flex flex-wrap items-center gap-3">
+            <a
+              href="/SmartPocket.apk"
+              download
               className="inline-flex items-center gap-2 rounded-full gradient-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-95"
             >
-              Try as Guest <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              href="/signup"
-              className="inline-flex items-center gap-2 rounded-full border border-border bg-card/40 px-6 py-3 text-sm font-semibold backdrop-blur transition hover:bg-card/70"
-            >
-              Create free account
-            </Link>
+              <Download className="h-4 w-4" /> Download Android APK
+            </a>
           </div>
-          <div className="flex items-center gap-6 pt-2 text-xs text-muted-foreground">
+          <div className="hero-features flex items-center gap-6 pt-2 text-xs text-muted-foreground">
             <span className="flex items-center gap-1.5">
-              <ShieldCheck className="h-4 w-4 text-primary" /> Bank-grade privacy
+              <ShieldCheck className="h-4 w-4 text-primary" /> 100% Free & Secure
             </span>
             <span className="flex items-center gap-1.5">
               <Zap className="h-4 w-4 text-primary" /> Works offline
@@ -111,9 +134,9 @@ function Hero() {
 
 function HeroPreview() {
   return (
-    <div className="relative">
+    <div className="hero-card relative">
       <div className="absolute -inset-6 -z-10 rounded-[2.5rem] bg-gradient-to-br from-primary/20 via-transparent to-transparent blur-2xl" />
-      <div className="glass-strong relative rounded-3xl p-6">
+      <div className="glass-strong relative rounded-3xl p-6 shadow-2xl">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs uppercase tracking-wider text-muted-foreground">
@@ -175,9 +198,9 @@ function Features() {
       desc: 'Floating ₹ button → amount → category. Done. Add an expense in under 3 seconds.',
     },
     {
-      icon: BarChart3,
-      title: 'Beautiful insights',
-      desc: 'Donut breakdowns, 7-day trends, and category rings powered by smooth charts.',
+      icon: Users,
+      title: 'SmartSplit',
+      desc: 'Going on a trip or living with roommates? Split bills seamlessly without awkward math.',
     },
     {
       icon: Bell,
@@ -192,7 +215,7 @@ function Features() {
     {
       icon: ShieldCheck,
       title: 'Privacy-first',
-      desc: 'Guest mode keeps everything on your device. Sign up only when you want sync.',
+      desc: 'Your data is secured with bank-grade encryption and OTP verifications.',
     },
     {
       icon: Sparkles,
@@ -216,7 +239,7 @@ function Features() {
           {items.map((it) => (
             <div
               key={it.title}
-              className="glass group rounded-3xl p-6 transition hover:-translate-y-1 hover:shadow-elevated"
+              className="feature-card glass group rounded-3xl p-6 transition hover:-translate-y-1 hover:shadow-elevated"
             >
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary transition group-hover:bg-primary/20">
                 <it.icon className="h-5 w-5" />
@@ -237,7 +260,7 @@ function Showcase() {
   return (
     <section id="showcase" className="border-t border-border/40 py-24">
       <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-2">
-        <div className="glass-strong rounded-3xl p-8">
+        <div className="glass-strong rounded-3xl p-8 shadow-2xl">
           <p className="text-xs uppercase tracking-wider text-muted-foreground">
             Today&apos;s spend
           </p>
@@ -302,21 +325,21 @@ function Mini({ emoji, label, amt }) {
 function CTA() {
   return (
     <section className="border-t border-border/40 px-4 py-24 sm:px-6">
-      <div className="glass-strong mx-auto max-w-4xl rounded-3xl p-10 text-center sm:p-14">
+      <div className="glass-strong mx-auto max-w-4xl rounded-3xl p-10 text-center sm:p-14 shadow-2xl">
         <h2 className="font-display text-4xl font-bold tracking-tight sm:text-5xl">
           Start tracking in <span className="text-gradient">10 seconds</span>.
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-          No signup. No credit card. Open the app, add your first expense, and
-          feel the difference.
+          Download the Android app today. No credit card required.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center gap-2 rounded-full gradient-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-95"
+          <a
+            href="/SmartPocket.apk"
+            download
+            className="inline-flex items-center gap-2 rounded-full gradient-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-95 hover:scale-105"
           >
-            Open SmartPocket <ArrowRight className="h-4 w-4" />
-          </Link>
+            <Download className="h-5 w-5" /> Download SmartPocket APK
+          </a>
         </div>
       </div>
     </section>
