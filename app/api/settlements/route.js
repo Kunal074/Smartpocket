@@ -87,29 +87,29 @@ export const GET = withAuth(async (request, user) => {
 export const POST = withAuth(async (request, user) => {
   try {
     const body = await request.json();
-    const { group_id, paid_to, amount, payment_method = 'upi', note = '' } = body;
+    const { group_id, paid_by, paid_to, amount, payment_method = 'cash', note = '' } = body;
 
-    if (!group_id || !paid_to || !amount) {
+    if (!paid_to || !amount) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Verify user is in the group
-    const membership = await checkMembership(group_id, user.id);
-    if (!membership) {
-      return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
+    // If a group_id is provided, verify membership
+    let resolvedGroupId = null;
+    if (group_id && group_id !== 'direct') {
+      const membership = await checkMembership(group_id, user.id);
+      if (!membership) {
+        return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
+      }
+      resolvedGroupId = group_id;
     }
 
-    // Verify recipient is in the group
-    const recipientMembership = await checkMembership(group_id, paid_to);
-    if (!recipientMembership) {
-      return NextResponse.json({ error: 'Recipient is not a member of this group' }, { status: 400 });
-    }
+    const paidBy = paid_by || user.id;
 
     const result = await query(`
-      INSERT INTO settlements (group_id, paid_by, paid_to, amount, payment_method, note, status, completed_at)
-      VALUES ($1, $2, $3, $4, $5, $6, 'completed', NOW())
+      INSERT INTO settlements (group_id, paid_by, paid_to, amount, status)
+      VALUES ($1, $2, $3, $4, 'completed')
       RETURNING *
-    `, [group_id, user.id, paid_to, amount, payment_method, note]);
+    `, [resolvedGroupId, paidBy, paid_to, amount]);
 
     return NextResponse.json(result.rows[0], { status: 201 });
 

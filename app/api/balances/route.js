@@ -140,6 +140,15 @@ export const GET = withAuth(async (request, user) => {
       }
       if (!globalMap[otherId]) globalMap[otherId] = { userId: otherId, name: otherName, upi_id: otherUpi, net: 0, groups: [] };
       globalMap[otherId].net += direction * amt;
+
+      // Find or create 'Udhaar (Direct)' group entry for this person
+      let udhaarGrp = globalMap[otherId].groups.find(g => g.groupId === 'direct');
+      if (!udhaarGrp) {
+        udhaarGrp = { groupId: 'direct', groupName: 'Udhaar (Direct)', net: 0 };
+        globalMap[otherId].groups.push(udhaarGrp);
+      }
+      udhaarGrp.net += (direction * amt);
+      udhaarGrp.net = parseFloat(udhaarGrp.net.toFixed(2));
     }
 
     // ── Final output ─────────────────────────────────────────────────────────
