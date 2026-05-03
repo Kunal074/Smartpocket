@@ -41,14 +41,15 @@ export const POST = withAuth(async (request, user) => {
 
     // Step 2: Parse with Groq Llama-3 to extract structured JSON
     const prompt = `
-You are an expense extraction AI. A user said this to log an expense:
+You are an expense extraction AI for an Indian finance app. 
+A user said this to log an expense (may be in English, Hindi, or Hinglish like "10 rs auto wale ko diya" or "20 ki chai"):
 "${transcript}"
 
 Extract the following and return ONLY a raw JSON object (no markdown, no explanation):
-1. "amount": The numeric amount spent (e.g. 300). If not found, return null.
-2. "category": Exactly one of: "food", "transport", "shopping", "bills", "entertainment", "other".
-3. "note": A concise 2-5 word description (e.g. "Coffee at Starbucks", "Uber to office").
-4. "date": If a date is mentioned (like "yesterday", "today"), return YYYY-MM-DD format for today's date (${new Date().toISOString().slice(0, 10)}). Otherwise return null.
+1. "amount": The numeric amount spent (e.g. 10). If not found, return null.
+2. "category": Exactly one of: "food", "transport", "shopping", "bills", "entertainment", "other". (e.g. "chai" = food, "auto" = transport)
+3. "note": A concise 2-5 word description of what was bought (e.g. "Chai", "Auto fare").
+4. "date": If a date is mentioned (like "kal", "yesterday", "aaj", "today"), return YYYY-MM-DD format for today's date (${new Date().toISOString().slice(0, 10)}). Otherwise return null.
 
 JSON only, no backticks, no extra text.
     `;
