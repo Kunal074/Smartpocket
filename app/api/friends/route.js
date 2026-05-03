@@ -63,8 +63,11 @@ export const POST = withAuth(async (request, user) => {
       findQuery = 'SELECT id, name FROM users WHERE email = $1';
       findValue = email;
     } else {
-      findQuery = 'SELECT id, name FROM users WHERE phone = $1';
-      findValue = phone;
+      findValue = phone.replace(/\D/g, '').slice(-10);
+      if (!findValue || findValue.length < 10) {
+        return NextResponse.json({ error: 'Invalid phone number format' }, { status: 400 });
+      }
+      findQuery = `SELECT id, name FROM users WHERE regexp_replace(phone, '[^0-9]', '', 'g') LIKE '%' || $1`;
     }
 
     const targetUser = await query(findQuery, [findValue]);
