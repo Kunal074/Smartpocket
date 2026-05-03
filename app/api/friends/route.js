@@ -10,11 +10,11 @@ const ensureMigration = async () => {
 
   await query(`
     CREATE TABLE IF NOT EXISTS friends (
-      id SERIAL PRIMARY KEY,
-      user1_id UUID REFERENCES users(id) ON DELETE CASCADE,
-      user2_id UUID REFERENCES users(id) ON DELETE CASCADE,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      UNIQUE(user1_id, user2_id)
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      friend_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(user_id, friend_id)
     );
   `);
 };
@@ -31,8 +31,8 @@ export const GET = withAuth(async (request, user) => {
         u.email,
         u.phone
       FROM friends f
-      JOIN users u ON (f.user1_id = u.id OR f.user2_id = u.id)
-      WHERE (f.user1_id = $1 OR f.user2_id = $1)
+      JOIN users u ON (f.user_id = u.id OR f.friend_id = u.id)
+      WHERE (f.user_id = $1 OR f.friend_id = $1)
         AND u.id != $1
       ORDER BY u.name ASC
     `, [user.id]);
@@ -82,8 +82,8 @@ export const POST = withAuth(async (request, user) => {
     // Check if already friends
     const existingCheck = await query(`
       SELECT id FROM friends 
-      WHERE (user1_id = $1 AND user2_id = $2) 
-         OR (user1_id = $2 AND user2_id = $1)
+      WHERE (user_id = $1 AND friend_id = $2) 
+         OR (user_id = $2 AND friend_id = $1)
     `, [user.id, friendId]);
 
     if (existingCheck.rowCount > 0) {
@@ -92,7 +92,7 @@ export const POST = withAuth(async (request, user) => {
 
     // Add friend record
     await query(`
-      INSERT INTO friends (user1_id, user2_id) 
+      INSERT INTO friends (user_id, friend_id) 
       VALUES ($1, $2)
     `, [user.id, friendId]);
 
