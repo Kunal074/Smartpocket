@@ -9,10 +9,10 @@ const patchHandler = async (request, user, { params }) => {
     const body = await request.json();
     const { saved_amount, is_completed, name, target_amount, target_date, icon, color } = body;
 
-    // Get old saved_amount to compute delta
+    // Get old saved_amount to compute delta for Arena sync
     const existing = await query(
       `SELECT saved_amount FROM savings_goals WHERE id = $1 AND user_id = $2`,
-      [parseInt(id, 10), user.id]
+      [id, user.id]
     );
 
     const fields = [];
@@ -31,7 +31,7 @@ const patchHandler = async (request, user, { params }) => {
       return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
     }
 
-    values.push(parseInt(id, 10), user.id);
+    values.push(id, user.id);
     const result = await query(
       `UPDATE savings_goals SET ${fields.join(', ')} WHERE id = $${idx++} AND user_id = $${idx} RETURNING *`,
       values
@@ -44,7 +44,6 @@ const patchHandler = async (request, user, { params }) => {
     const updated = result.rows[0];
 
     // ── Auto-sync Arena ──────────────────────────────────────────────────
-    // If saved_amount changed, update the arena challenge with the delta
     if (saved_amount !== undefined && existing.rowCount > 0) {
       const oldSaved = parseFloat(existing.rows[0].saved_amount);
       const newSaved = parseFloat(saved_amount);
@@ -52,8 +51,6 @@ const patchHandler = async (request, user, { params }) => {
 
       if (delta > 0) {
         const month = new Date().toISOString().slice(0, 7);
-
-        // Check if user has an active arena challenge
         const arena = await query(
           `SELECT * FROM savings_challenges WHERE user_id = $1 AND month = $2`,
           [user.id, month]
@@ -95,14 +92,13 @@ const patchHandler = async (request, user, { params }) => {
   }
 };
 
-
 // DELETE /api/savings/[id] — Delete a savings goal
 const deleteHandler = async (request, user, { params }) => {
   try {
     const { id } = await params;
     const result = await query(
       `DELETE FROM savings_goals WHERE id = $1 AND user_id = $2 RETURNING id`,
-      [parseInt(id, 10), user.id]
+      [id, user.id]
     );
 
     if (result.rowCount === 0) {
