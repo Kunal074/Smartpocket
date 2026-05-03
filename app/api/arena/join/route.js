@@ -30,23 +30,6 @@ export const POST = withAuth(async (request, user) => {
     const month = CURRENT_MONTH();
     const tier = getTier(parseFloat(target_amount));
 
-    // If a custom goal_name is provided (no existing goal selected),
-    // auto-create a savings goal so it shows up in the Savings screen
-    if (goal_name && goal_name.trim()) {
-      const existingGoal = await query(
-        `SELECT id FROM savings_goals WHERE user_id = $1 AND name ILIKE $2 AND is_completed = false LIMIT 1`,
-        [user.id, goal_name.trim()]
-      );
-
-      if (existingGoal.rowCount === 0) {
-        await query(
-          `INSERT INTO savings_goals (user_id, name, title, target_amount, icon, color)
-           VALUES ($1, $2, $2, $3, '🎯', '#5A67D8')`,
-          [user.id, goal_name.trim(), parseFloat(target_amount)]
-        );
-      }
-    }
-
     const result = await query(
       `INSERT INTO savings_challenges (user_id, month, target_amount, tier, goal_name)
        VALUES ($1, $2, $3, $4, $5)
