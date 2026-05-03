@@ -12,6 +12,7 @@ export async function GET() {
         target_amount         NUMERIC(12,2)  NOT NULL,
         saved_amount          NUMERIC(12,2)  NOT NULL DEFAULT 0,
         tier                  VARCHAR(20)    NOT NULL,
+        goal_name             TEXT,
         points                INTEGER        NOT NULL DEFAULT 0,
         is_completed          BOOLEAN        DEFAULT FALSE,
         achieved_at           TIMESTAMPTZ,
@@ -20,6 +21,9 @@ export async function GET() {
         UNIQUE(user_id, month)
       )
     `);
+
+    // Add goal_name column to existing tables
+    await query(`ALTER TABLE savings_challenges ADD COLUMN IF NOT EXISTS goal_name TEXT`);
 
     return NextResponse.json({ success: true, message: 'savings_challenges table ready!' });
   } catch (error) {

@@ -29,7 +29,7 @@ export const GET = withAuth(async (request, user) => {
       leaderboard = await query(
         `SELECT 
           sc.user_id, u.name, sc.saved_amount, sc.target_amount, sc.points, sc.tier,
-          sc.is_completed, sc.achievement_photo_url,
+          sc.is_completed, sc.achievement_photo_url, sc.goal_name,
           ROUND((sc.saved_amount / sc.target_amount) * 100, 1) AS pct,
           RANK() OVER (ORDER BY sc.points DESC) AS rank
          FROM savings_challenges sc
@@ -53,7 +53,7 @@ export const GET = withAuth(async (request, user) => {
       leaderboard = await query(
         `SELECT 
           sc.user_id, u.name, sc.saved_amount, sc.target_amount, sc.points, sc.tier,
-          sc.is_completed, sc.achievement_photo_url,
+          sc.is_completed, sc.achievement_photo_url, sc.goal_name,
           ROUND((sc.saved_amount / sc.target_amount) * 100, 1) AS pct,
           RANK() OVER (ORDER BY sc.points DESC) AS rank
          FROM savings_challenges sc
