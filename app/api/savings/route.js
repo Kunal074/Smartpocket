@@ -6,7 +6,7 @@ import { withAuth } from '@/lib/middleware';
 const getHandler = async (request, user) => {
   try {
     const result = await query(
-      `SELECT * FROM savings_goals WHERE user_id = $1 ORDER BY is_completed ASC, created_at DESC`,
+      `SELECT *, COALESCE(name, title) AS name FROM savings_goals WHERE user_id = $1 ORDER BY is_completed ASC, created_at DESC`,
       [user.id]
     );
     return NextResponse.json({ goals: result.rows }, { status: 200 });
@@ -26,8 +26,8 @@ const postHandler = async (request, user) => {
     }
 
     const result = await query(
-      `INSERT INTO savings_goals (user_id, name, target_amount, target_date, icon, color)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO savings_goals (user_id, name, title, target_amount, target_date, icon, color)
+       VALUES ($1, $2, $2, $3, $4, $5, $6)
        RETURNING *`,
       [user.id, name, parseFloat(target_amount), target_date || null, icon || '🎯', color || '#5A67D8']
     );
