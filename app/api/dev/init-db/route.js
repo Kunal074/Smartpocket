@@ -190,14 +190,15 @@ export async function GET() {
     // savings goals
     await query(`
       CREATE TABLE IF NOT EXISTS savings_goals (
-        id            UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
+        id            SERIAL         PRIMARY KEY,
         user_id       UUID           NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        title         TEXT           NOT NULL,
+        name          TEXT           NOT NULL,
         target_amount NUMERIC(12, 2) NOT NULL,
         saved_amount  NUMERIC(12, 2) NOT NULL DEFAULT 0,
         icon          TEXT           DEFAULT '🎯',
         color         TEXT           DEFAULT '#5A67D8',
-        deadline      DATE,
+        target_date   DATE,
+        is_completed  BOOLEAN        NOT NULL DEFAULT FALSE,
         created_at    TIMESTAMPTZ    DEFAULT NOW()
       )
     `);
