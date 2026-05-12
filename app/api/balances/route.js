@@ -151,6 +151,43 @@ export const GET = withAuth(async (request, user) => {
       udhaarGrp.net = parseFloat(udhaarGrp.net.toFixed(2));
     }
 
+    // ── Direct (non-group) settlements ───────────────────────────────────────
+    const directSettlements = await query(`
+      SELECT s.paid_by, s.paid_to, s.amount,
+             payer.name as payer_name, payer.upi_id as payer_upi,
+             payee.name as payee_name, payee.upi_id as payee_upi
+      FROM settlements s
+      JOIN users payer ON payer.id = s.paid_by
+      JOIN users payee ON payee.id = s.paid_to
+      WHERE s.group_id IS NULL AND s.status = 'completed'
+        AND (s.paid_by = $1 OR s.paid_to = $1)
+    `, [user.id]);
+
+    for (const row of directSettlements.rows) {
+      const amt = parseFloat(row.amount);
+      let otherId, otherName, otherUpi, direction;
+      
+      if (row.paid_by === user.id) {
+        // I paid the other person -> my balance goes UP (+1)
+        otherId = row.paid_to; otherName = row.payee_name; otherUpi = row.payee_upi; direction = +1;
+      } else {
+        // They paid me -> my balance goes DOWN (-1)
+        otherId = row.paid_by; otherName = row.payer_name; otherUpi = row.payer_upi; direction = -1;
+      }
+
+      if (!globalMap[otherId]) globalMap[otherId] = { userId: otherId, name: otherName, upi_id: otherUpi, net: 0, groups: [] };
+      globalMap[otherId].net += direction * amt;
+
+      // Find or create 'Udhaar (Direct)' group entry for this person
+      let udhaarGrp = globalMap[otherId].groups.find(g => g.groupId === 'direct');
+      if (!udhaarGrp) {
+        udhaarGrp = { groupId: 'direct', groupName: 'Udhaar (Direct)', net: 0 };
+        globalMap[otherId].groups.push(udhaarGrp);
+      }
+      udhaarGrp.net += (direction * amt);
+      udhaarGrp.net = parseFloat(udhaarGrp.net.toFixed(2));
+    }
+
     // ── Final output ─────────────────────────────────────────────────────────
     const byPerson = Object.values(globalMap)
       .map(b => ({ ...b, net: parseFloat(b.net.toFixed(2)) }))
