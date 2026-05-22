@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowRight, Users } from 'lucide-react';
+import { ArrowRight, Users } from '@phosphor-icons/react';
 
 export default function GroupCard({ group }) {
   const { id, name, icon, color, member_count, description, type } = group;

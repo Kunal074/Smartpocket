@@ -1,6 +1,6 @@
 'use client';
 
-import { PiggyBank } from 'lucide-react';
+import { PiggyBank } from '@phosphor-icons/react';
 import { formatINR } from '@/lib/format';
 
 export default function SpendCard({ 

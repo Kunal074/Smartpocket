@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Receipt, Camera, MessageSquare, Globe, Navigation, Search } from 'lucide-react';
+import { X, Receipt, Camera, Chat as MessageSquare, Globe, NavigationArrow as Navigation, MagnifyingGlass as Search } from '@phosphor-icons/react';
 import { useGroupExpenses } from '@/hooks/useGroupExpenses';
 import { useGroups } from '@/hooks/useGroups';
 

@@ -2,8 +2,9 @@
 
 import { CATEGORIES } from '@/lib/categories';
 import { currentMonthKey } from '@/lib/format';
-import { Filter } from 'lucide-react';
+import { Funnel as Filter } from '@phosphor-icons/react';
 import Select from '@/components/ui/Select';
+import CategoryIcon from '@/components/ui/CategoryIcon';
 
 export default function ExpenseFilters({ 
   filterMonth, 
@@ -20,7 +21,12 @@ export default function ExpenseFilters({
     { value: 'all', label: 'All Categories' },
     ...CATEGORIES.filter((c) => c.kind === 'expense').map((cat) => ({
       value: cat.id,
-      label: `${cat.emoji} ${cat.name}`,
+      label: (
+        <span className="flex items-center gap-2">
+          <CategoryIcon id={cat.id} className="h-4 w-4 text-muted-foreground" />
+          <span>{cat.name}</span>
+        </span>
+      ),
     })),
   ];
 

@@ -3,13 +3,13 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  LayoutDashboard,
+  SquaresFour as LayoutDashboard,
   ListChecks,
   PiggyBank,
   Users,
-  Sparkles,
+  Sparkle as Sparkles,
   Plus,
-} from 'lucide-react';
+} from '@phosphor-icons/react';
 
 const NAV = [
   { href: '/dashboard',          label: 'Home',      icon: LayoutDashboard },

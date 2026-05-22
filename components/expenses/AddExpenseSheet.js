@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { CATEGORIES } from '@/lib/categories';
-import { X, Calendar as CalendarIcon, AlignLeft } from 'lucide-react';
+import { X, Calendar as CalendarIcon, TextAlignLeft as AlignLeft } from '@phosphor-icons/react';
 import { toast } from 'sonner';
+import CategoryIcon from '@/components/ui/CategoryIcon';
 
 export default function AddExpenseSheet({ open, onOpenChange }) {
   const [amount, setAmount] = useState('');
@@ -95,7 +96,13 @@ export default function AddExpenseSheet({ open, onOpenChange }) {
                         : 'border-border bg-card hover:bg-accent/40'
                     }`}
                   >
-                    <span className="text-2xl">{cat.emoji}</span>
+                    <div className={`flex h-10 w-10 items-center justify-center rounded-xl transition-colors ${
+                      isSelected 
+                        ? 'bg-primary/20 text-primary' 
+                        : 'bg-muted text-muted-foreground'
+                    }`}>
+                      <CategoryIcon id={cat.id} className="h-5 w-5" />
+                    </div>
                     <span className="text-[10px] font-medium sm:text-xs text-center leading-tight">
                       {cat.name}
                     </span>

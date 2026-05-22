@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { ArrowRight, User, Wallet, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, User, Wallet, CheckCircle as CheckCircle2 } from '@phosphor-icons/react';
 import { useGroups } from '@/hooks/useGroups';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';

@@ -2,6 +2,7 @@
 
 import { categoryById } from '@/lib/categories';
 import { formatINR } from '@/lib/format';
+import CategoryIcon from '@/components/ui/CategoryIcon';
 
 export default function RecentTransactions({ expenses = [] }) {
   if (expenses.length === 0) {
@@ -54,10 +55,13 @@ export default function RecentTransactions({ expenses = [] }) {
             >
               <div className="flex items-center gap-4">
                 <div
-                  className="flex h-12 w-12 items-center justify-center rounded-2xl text-xl shadow-sm"
-                  style={{ backgroundColor: `color-mix(in oklab, ${cat.color} 15%, transparent)` }}
+                  className="flex h-12 w-12 items-center justify-center rounded-2xl shadow-sm"
+                  style={{ 
+                    backgroundColor: `color-mix(in oklab, ${cat.color} 15%, transparent)`,
+                    color: cat.color
+                  }}
                 >
-                  {cat.emoji}
+                  <CategoryIcon id={cat.id} className="h-5 w-5" />
                 </div>
                 <div>
                   <p className="font-medium">{cat.name}</p>

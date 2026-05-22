@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Users, Plane, Home, Briefcase, Heart, Star } from 'lucide-react';
+import { X, Users, Airplane as Plane, House as Home, Briefcase, Heart, Star } from '@phosphor-icons/react';
 import { useGroups } from '@/hooks/useGroups';
 
 const GROUP_TYPES = [

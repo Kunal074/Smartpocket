@@ -83,12 +83,27 @@ export function useAuth() {
     router.push('/login');
   };
 
+  const loginAsDemo = async () => {
+    const res = await fetch('/api/auth/demo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+
+    localStorage.setItem('token', data.token);
+    await fetchUser();
+    router.push('/dashboard');
+  };
+
   return {
     user,
     loading,
     login,
     signup,
     logout,
+    loginAsDemo,
     refetch: fetchUser,
   };
 }

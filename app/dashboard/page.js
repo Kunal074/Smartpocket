@@ -5,9 +5,9 @@ import Link from 'next/link';
 import { useExpenses } from '@/hooks/useExpenses';
 import { useAuth } from '@/hooks/useAuth';
 import {
-  TrendingUp, Wallet, ChevronRight, Plus,
-  Users, MessageSquare, Globe, RefreshCw, User,
-} from 'lucide-react';
+  TrendUp as TrendingUp, Wallet, CaretRight as ChevronRight, Plus,
+  Users, Chat as MessageSquare, Globe, ArrowsCounterClockwise as RefreshCw, User,
+} from '@phosphor-icons/react';
 
 const CATEGORY_EMOJI = {
   food: '🍔', transport: '🚕', groceries: '🛒', rent: '🏠',

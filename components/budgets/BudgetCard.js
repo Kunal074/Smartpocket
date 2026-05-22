@@ -3,7 +3,8 @@
 import { categoryById } from '@/lib/categories';
 import { formatINR } from '@/lib/format';
 import RingProgress from './RingProgress';
-import { Edit2, Trash2 } from 'lucide-react';
+import { Pencil as Edit2, Trash as Trash2 } from '@phosphor-icons/react';
+import CategoryIcon from '@/components/ui/CategoryIcon';
 
 export default function BudgetCard({ budget, spend = 0, onEdit, onDelete }) {
   const cat = categoryById(budget.categoryId);
@@ -25,10 +26,13 @@ export default function BudgetCard({ budget, spend = 0, onEdit, onDelete }) {
       <div className="relative flex items-start justify-between">
         <div className="flex items-center gap-4">
           <div
-            className="flex h-14 w-14 items-center justify-center rounded-2xl text-2xl shadow-inner"
-            style={{ backgroundColor: `color-mix(in oklab, ${cat.color} 15%, transparent)` }}
+            className="flex h-14 w-14 items-center justify-center rounded-2xl shadow-inner text-primary"
+            style={{ 
+              backgroundColor: `color-mix(in oklab, ${cat.color} 15%, transparent)`,
+              color: cat.color
+            }}
           >
-            {cat.emoji}
+            <CategoryIcon id={cat.id} className="h-6 w-6" />
           </div>
           <div>
             <h3 className="font-display text-lg font-semibold tracking-tight">

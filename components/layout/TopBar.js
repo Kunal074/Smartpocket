@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Moon, Plus, Sun } from 'lucide-react';
+import { ArrowLeft, Moon, Plus, Sun } from '@phosphor-icons/react';
 
 const TITLE_MAP = {
   '/dashboard': 'Dashboard',

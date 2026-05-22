@@ -1,22 +1,28 @@
 'use client';
 
 import Link from 'next/link';
-import { useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { useRef, useState, useEffect } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { toast } from 'sonner';
 import {
   ArrowRight,
-  BarChart3,
+  ChartBar,
   Bell,
   PiggyBank,
   ShieldCheck,
-  Sparkles,
+  Sparkle,
   Wallet,
-  Zap,
-  Download,
-  Users
-} from 'lucide-react';
+  Lightning,
+  DownloadSimple,
+  Users,
+  House,
+  ShoppingCart,
+  Coffee,
+  Car
+} from '@phosphor-icons/react';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
@@ -24,6 +30,33 @@ if (typeof window !== 'undefined') {
 
 export default function Landing() {
   const container = useRef(null);
+  const router = useRouter();
+  const [demoLoading, setDemoLoading] = useState(false);
+
+  const handleDemoStart = async () => {
+    if (demoLoading) return;
+    setDemoLoading(true);
+    const toastId = toast.loading('Initializing custom sandbox demo...');
+    try {
+      const res = await fetch('/api/auth/demo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to start demo');
+      }
+
+      localStorage.setItem('token', data.token);
+      toast.success('Welcome to SmartPocket Sandbox!', { id: toastId });
+      router.push('/dashboard');
+    } catch (err) {
+      toast.error(err.message || 'Something went wrong', { id: toastId });
+      setDemoLoading(false);
+    }
+  };
 
   useGSAP(() => {
     // Hero Animations
@@ -65,17 +98,18 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen" ref={container}>
-      <Header />
-      <Hero />
+      <Header onDemoStart={handleDemoStart} demoLoading={demoLoading} />
+      <Hero onDemoStart={handleDemoStart} demoLoading={demoLoading} />
       <Features />
+      <Screenshots />
       <Showcase />
-      <CTA />
+      <CTA onDemoStart={handleDemoStart} demoLoading={demoLoading} />
       <Footer />
     </div>
   );
 }
 
-function Header() {
+function Header({ onDemoStart, demoLoading }) {
   return (
     <header className="sticky top-0 z-30 border-b border-border/40 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
@@ -91,17 +125,25 @@ function Header() {
           <a href="#features" className="hover:text-foreground transition">
             Features
           </a>
-          <a href="#showcase" className="hover:text-foreground transition">
-            Showcase
+          <a href="#screenshots" className="hover:text-foreground transition">
+            Screenshots
           </a>
         </nav>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={onDemoStart}
+            disabled={demoLoading}
+            className="text-sm font-semibold text-primary hover:text-primary/80 transition-colors mr-2 disabled:opacity-50"
+          >
+            ✨ Try Demo
+          </button>
           <a
             href="/SmartPocket.apk"
             download
             className="inline-flex items-center gap-2 rounded-full gradient-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-95"
           >
-            <Download className="h-4 w-4" /> Download App
+            <DownloadSimple className="h-4 w-4" /> Download App
           </a>
         </div>
       </div>
@@ -109,13 +151,13 @@ function Header() {
   );
 }
 
-function Hero() {
+function Hero({ onDemoStart, demoLoading }) {
   return (
     <section className="relative overflow-hidden">
       <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-20 sm:px-6 lg:grid-cols-2 lg:py-28">
         <div className="space-y-7">
           <div className="hero-badge inline-flex items-center gap-2 rounded-full border border-border bg-card/50 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur">
-            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            <Sparkle className="h-3.5 w-3.5 text-primary" />
             Built for Indian wallets — ₹ first
           </div>
           <h1 className="hero-title font-display text-5xl font-bold leading-[1.05] tracking-tight sm:text-6xl">
@@ -124,15 +166,23 @@ function Hero() {
           </h1>
           <p className="hero-subtitle max-w-lg text-lg leading-relaxed text-muted-foreground">
             SmartPocket is a beautifully simple expense tracker. Add a chai in 3
-            taps, set category budgets, and split bills seamlessly — directly from your Android phone.
+            taps, set category budgets, and split bills seamlessly — directly in your browser or Android phone.
           </p>
           <div className="hero-buttons flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={onDemoStart}
+              disabled={demoLoading}
+              className="inline-flex items-center gap-2 rounded-full gradient-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-95 hover:scale-105 disabled:opacity-50"
+            >
+              ✨ Try Live Demo
+            </button>
             <a
               href="/SmartPocket.apk"
               download
-              className="inline-flex items-center gap-2 rounded-full gradient-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-95"
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-card/40 backdrop-blur px-6 py-3 text-sm font-semibold text-foreground transition hover:bg-accent/60 hover:scale-105"
             >
-              <Download className="h-4 w-4" /> Download Android APK
+              <DownloadSimple className="h-4 w-4" /> Download APK
             </a>
           </div>
           <div className="hero-features flex items-center gap-6 pt-2 text-xs text-muted-foreground">
@@ -140,7 +190,7 @@ function Hero() {
               <ShieldCheck className="h-4 w-4 text-primary" /> 100% Free & Secure
             </span>
             <span className="flex items-center gap-1.5">
-              <Zap className="h-4 w-4 text-primary" /> Works offline
+              <Lightning className="h-4 w-4 text-primary" /> Works offline
             </span>
           </div>
         </div>
@@ -180,15 +230,18 @@ function HeroPreview() {
 
         <div className="mt-6 space-y-3">
           {[
-            { emoji: '🏠', name: 'Rent', amt: 18000, pct: 100, color: 'oklch(0.72 0.15 230)' },
-            { emoji: '🛒', name: 'Groceries', amt: 4820, pct: 60, color: 'oklch(0.82 0.16 168)' },
-            { emoji: '🍱', name: 'Food & Chai', amt: 2160, pct: 54, color: 'oklch(0.82 0.16 75)' },
-            { emoji: '🚗', name: 'Transport', amt: 1340, pct: 45, color: 'oklch(0.7 0.18 295)' },
+            { icon: House, name: 'Rent', amt: 18000, pct: 100, color: 'oklch(0.72 0.15 230)' },
+            { icon: ShoppingCart, name: 'Groceries', amt: 4820, pct: 60, color: 'oklch(0.82 0.16 168)' },
+            { icon: Coffee, name: 'Food & Chai', amt: 2160, pct: 54, color: 'oklch(0.82 0.16 75)' },
+            { icon: Car, name: 'Transport', amt: 1340, pct: 45, color: 'oklch(0.7 0.18 295)' },
           ].map((r) => (
             <div key={r.name} className="rounded-2xl bg-accent/40 p-3">
               <div className="flex items-center justify-between text-sm">
                 <span className="flex items-center gap-2 font-medium">
-                  <span className="text-lg">{r.emoji}</span> {r.name}
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <r.icon className="h-4 w-4" />
+                  </span>
+                  {r.name}
                 </span>
                 <span className="font-display tabular-nums">
                   ₹{r.amt.toLocaleString('en-IN')}
@@ -211,7 +264,7 @@ function HeroPreview() {
 function Features() {
   const items = [
     {
-      icon: Zap,
+      icon: Lightning,
       title: '3-tap entry',
       desc: 'Floating ₹ button → amount → category. Done. Add an expense in under 3 seconds.',
     },
@@ -236,7 +289,7 @@ function Features() {
       desc: 'Your data is secured with bank-grade encryption and OTP verifications.',
     },
     {
-      icon: Sparkles,
+      icon: Sparkle,
       title: 'Made for India',
       desc: '₹ INR first, Indian categories, Indian number formatting (lakhs & crores).',
     },
@@ -274,6 +327,158 @@ function Features() {
   );
 }
 
+function Screenshots() {
+  const scrollRef = useRef(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const handleScroll = () => {
+    if (!scrollRef.current) return;
+    const container = scrollRef.current;
+    
+    const containerRect = container.getBoundingClientRect();
+    const containerCenter = containerRect.left + containerRect.width / 2;
+    
+    let closestIndex = 0;
+    let minDistance = Infinity;
+    
+    const children = Array.from(container.children);
+    let itemIndex = 0;
+    
+    children.forEach((child) => {
+      // Ignore the style tag which is also a child
+      if (child.tagName === 'STYLE') return;
+      
+      const childRect = child.getBoundingClientRect();
+      const childCenter = childRect.left + childRect.width / 2;
+      const distance = Math.abs(containerCenter - childCenter);
+      
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestIndex = itemIndex;
+      }
+      itemIndex++;
+    });
+    
+    setActiveIndex(closestIndex);
+  };
+
+  useEffect(() => {
+    // Initial calculation
+    handleScroll();
+  }, []);
+
+  const screens = [
+    {
+      id: 'home',
+      src: '/Screenshots/Screenshot_home.png',
+      title: 'Home Dashboard',
+      desc: 'Get a clear overview of your monthly spending, active budgets, and quick actions.'
+    },
+    {
+      id: 'add',
+      src: '/Screenshots/Screenshot_Add_Expense.png',
+      title: 'Quick Add',
+      desc: 'Log your daily expenses in under 3 seconds with our streamlined entry flow.'
+    },
+    {
+      id: 'analytics',
+      src: '/Screenshots/Screenshot_Analytics.png',
+      title: 'Deep Analytics',
+      desc: 'Visualize your spending habits across categories to make smarter financial decisions.'
+    },
+    {
+      id: 'split',
+      src: '/Screenshots/Screenshot_Smart_split_tab.png',
+      title: 'Smart Split',
+      desc: 'Managing shared expenses with roommates or trip buddies has never been easier.'
+    },
+    {
+      id: 'group',
+      src: '/Screenshots/Screenshot_Group.png',
+      title: 'Group Details',
+      desc: 'Track who paid what and settle up instantly without any awkward math.'
+    },
+    {
+      id: 'budget',
+      src: '/Screenshots/Screenshot_add_budget.png',
+      title: 'Set Budgets',
+      desc: 'Create category-wise monthly limits and get notified before you overspend.'
+    },
+    {
+      id: 'arena',
+      src: '/Screenshots/Screenshot_Arena.png',
+      title: 'Financial Arena',
+      desc: 'Gamify your savings and challenge yourself to achieve your financial goals.'
+    }
+  ];
+
+  return (
+    <section id="screenshots" className="border-t border-border/40 py-12 bg-card/10 overflow-hidden flex flex-col justify-center min-h-[100vh]">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="mx-auto max-w-2xl text-center">
+          <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
+            See it in <span className="text-gradient">Action</span>
+          </h2>
+          <p className="mt-3 text-sm text-muted-foreground">
+            A sneak peek into the SmartPocket app experience.
+          </p>
+        </div>
+      </div>
+        
+      {/* Horizontal scroll container for screenshots - FULL WIDTH */}
+      <div 
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className="mt-8 flex gap-6 overflow-x-auto pb-8 pt-6 snap-x snap-mandatory px-[calc(50vw-110px)] sm:px-[calc(50vw-120px)] custom-scrollbar w-full"
+      >
+        {screens.map((screen, index) => {
+          const isActive = index === activeIndex;
+          return (
+            <div 
+              key={screen.id} 
+              className={`flex flex-col items-center gap-4 shrink-0 snap-center w-[220px] sm:w-[240px] transition-all duration-500 ease-out ${
+                isActive ? 'scale-105 opacity-100 z-10' : 'scale-90 opacity-40 blur-[2px] -z-10'
+              }`}
+            >
+              <div className={`relative overflow-hidden rounded-[2rem] border-[6px] bg-background shadow-2xl h-[460px] sm:h-[500px] w-full transition-colors duration-500 ${
+                isActive ? 'border-primary/50' : 'border-border'
+              }`}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img 
+                  src={screen.src} 
+                  alt={screen.title} 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className={`text-center px-2 transition-all duration-500 ${isActive ? 'opacity-100' : 'opacity-50'}`}>
+                <h3 className="font-display text-lg font-bold text-foreground">{screen.title}</h3>
+                <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{screen.desc}</p>
+              </div>
+            </div>
+          );
+        })}
+        
+        <style jsx>{`
+          .custom-scrollbar::-webkit-scrollbar {
+            height: 6px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 10px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+          }
+        `}</style>
+      </div>
+    </section>
+  );
+}
+
 function Showcase() {
   return (
     <section id="showcase" className="border-t border-border/40 py-24">
@@ -286,8 +491,8 @@ function Showcase() {
             <span className="text-muted-foreground/60">₹</span>720
           </p>
           <div className="mt-6 grid grid-cols-2 gap-3">
-            <Mini emoji="🛒" label="Groceries" amt={540} />
-            <Mini emoji="🍱" label="Chai" amt={180} />
+            <Mini icon={ShoppingCart} label="Groceries" amt={540} />
+            <Mini icon={Coffee} label="Chai" amt={180} />
           </div>
           <div className="mt-6 rounded-2xl border border-warning/30 bg-warning/10 p-4 text-sm">
             <p className="flex items-center gap-2 font-medium text-warning">
@@ -328,10 +533,12 @@ function Showcase() {
   );
 }
 
-function Mini({ emoji, label, amt }) {
+function Mini({ icon: Icon, label, amt }) {
   return (
     <div className="rounded-2xl bg-accent/40 p-4">
-      <p className="text-2xl">{emoji}</p>
+      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary mb-2">
+        <Icon className="h-5 w-5" />
+      </div>
       <p className="mt-2 text-xs text-muted-foreground">{label}</p>
       <p className="font-display text-lg font-semibold tabular-nums">
         ₹{amt.toLocaleString('en-IN')}
@@ -340,7 +547,7 @@ function Mini({ emoji, label, amt }) {
   );
 }
 
-function CTA() {
+function CTA({ onDemoStart, demoLoading }) {
   return (
     <section id="cta-container" className="border-t border-border/40 px-4 py-24 sm:px-6">
       <div className="glass-strong mx-auto max-w-4xl rounded-3xl p-10 text-center sm:p-14 shadow-2xl">
@@ -348,15 +555,23 @@ function CTA() {
           Start tracking in <span className="text-gradient">10 seconds</span>.
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-          Download the Android app today. No credit card required.
+          Try our interactive sandbox demo instantly or download the Android app today. No signup required.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <button
+            type="button"
+            onClick={onDemoStart}
+            disabled={demoLoading}
+            className="inline-flex items-center gap-2 rounded-full gradient-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-95 hover:scale-105 disabled:opacity-50"
+          >
+            ✨ Try Sandbox Demo
+          </button>
           <a
             href="/SmartPocket.apk"
             download
-            className="inline-flex items-center gap-2 rounded-full gradient-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-95 hover:scale-105"
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-card/40 backdrop-blur px-7 py-3.5 text-sm font-semibold text-foreground transition hover:bg-accent/60 hover:scale-105"
           >
-            <Download className="h-5 w-5" /> Download SmartPocket APK
+            <DownloadSimple className="h-5 w-5" /> Download APK
           </a>
         </div>
       </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Plus, Users, Wallet, Receipt, Settings, Share2, Download, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Plus, Users, Wallet, Receipt, Gear as Settings, ShareNetwork as Share2, DownloadSimple as Download, ChatCircle as MessageCircle } from '@phosphor-icons/react';
 import { useGroups } from '@/hooks/useGroups';
 import { useGroupExpenses } from '@/hooks/useGroupExpenses';
 import AddGroupExpenseSheet from '@/components/groups/AddGroupExpenseSheet';

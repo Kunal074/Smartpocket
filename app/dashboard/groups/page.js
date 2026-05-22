@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Plus, Users, Search } from 'lucide-react';
+import { Plus, Users, MagnifyingGlass as Search } from '@phosphor-icons/react';
 import { useGroups } from '@/hooks/useGroups';
 import GroupCard from '@/components/groups/GroupCard';
 import CreateGroupSheet from '@/components/groups/CreateGroupSheet';

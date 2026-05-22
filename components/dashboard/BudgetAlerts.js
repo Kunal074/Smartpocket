@@ -2,7 +2,7 @@
 
 import { categoryById } from '@/lib/categories';
 import { formatINR } from '@/lib/format';
-import { Bell, AlertTriangle } from 'lucide-react';
+import { Bell, Warning as AlertTriangle } from '@phosphor-icons/react';
 
 export default function BudgetAlerts({ expenses = [], budgets = [] }) {
   if (budgets.length === 0) return null;

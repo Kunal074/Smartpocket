@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock, User, Loader2, ArrowRight } from 'lucide-react';
+import { Envelope as Mail, Lock, User, CircleNotch as Loader2, ArrowRight } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 
 export default function SignupForm() {
@@ -37,6 +37,30 @@ export default function SignupForm() {
       // Save token
       localStorage.setItem('token', data.token);
       toast.success('Account created successfully!');
+      router.push('/dashboard');
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDemoLogin = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/demo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to start demo');
+      }
+
+      localStorage.setItem('token', data.token);
+      toast.success('Welcome to SmartPocket Sandbox!');
       router.push('/dashboard');
     } catch (err) {
       toast.error(err.message);
@@ -117,6 +141,21 @@ export default function SignupForm() {
           )}
         </button>
       </form>
+
+      <div className="mt-6 flex items-center justify-between gap-2">
+        <div className="h-[1px] w-full bg-border/60" />
+        <span className="text-xs uppercase text-muted-foreground whitespace-nowrap px-1">Or</span>
+        <div className="h-[1px] w-full bg-border/60" />
+      </div>
+
+      <button
+        type="button"
+        onClick={handleDemoLogin}
+        disabled={loading}
+        className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-primary/40 bg-primary/5 py-3.5 text-sm font-semibold text-primary transition hover:bg-primary/10 disabled:opacity-70"
+      >
+        ✨ Try Guest Demo Account
+      </button>
 
       <div className="mt-6 text-center text-sm text-muted-foreground">
         Already have an account?{' '}

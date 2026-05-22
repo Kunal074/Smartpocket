@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import BudgetCard from '@/components/budgets/BudgetCard';
 import { currentMonthKey } from '@/lib/format';
 import { CATEGORIES } from '@/lib/categories';
-import { Plus } from 'lucide-react';
+import { Plus } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import Select from '@/components/ui/Select';
 

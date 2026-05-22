@@ -2,8 +2,9 @@
 
 import { categoryById } from '@/lib/categories';
 import { formatINR, monthKey } from '@/lib/format';
-import { Trash2 } from 'lucide-react';
+import { Trash as Trash2 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
+import CategoryIcon from '@/components/ui/CategoryIcon';
 
 export default function ExpenseList({ expenses, filterMonth, filterCategory }) {
   // Apply filters
@@ -56,10 +57,13 @@ export default function ExpenseList({ expenses, filterMonth, filterCategory }) {
           >
             <div className="flex items-center gap-4">
               <div
-                className="flex h-14 w-14 items-center justify-center rounded-2xl text-2xl shadow-inner"
-                style={{ backgroundColor: `color-mix(in oklab, ${cat.color} 15%, transparent)` }}
+                className="flex h-14 w-14 items-center justify-center rounded-2xl shadow-inner text-primary"
+                style={{ 
+                  backgroundColor: `color-mix(in oklab, ${cat.color} 15%, transparent)`,
+                  color: cat.color
+                }}
               >
-                {cat.emoji}
+                <CategoryIcon id={cat.id} className="h-6 w-6" />
               </div>
               <div>
                 <p className="font-medium">{cat.name}</p>

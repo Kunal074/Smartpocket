@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { LogOut, Save, Shield, User, Wallet } from 'lucide-react';
+import { SignOut as LogOut, FloppyDisk as Save, Shield, User, Wallet } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 
