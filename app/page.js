@@ -126,7 +126,7 @@ function Header({ onDemoStart, demoLoading }) {
             Features
           </a>
           <a href="#screenshots" className="hover:text-foreground transition">
-            Screenshots
+            Showcase
           </a>
         </nav>
         <div className="flex items-center gap-3">
