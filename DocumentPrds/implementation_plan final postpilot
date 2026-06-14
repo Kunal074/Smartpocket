@@ -1,0 +1,151 @@
+# Product Requirements Document (Final)
+## Post Automation Clone (Zapier/n8n Alternative)
+**Version:** 2.0 | **Status:** Draft -> Final
+
+---
+
+## 1. Product Overview
+A full-stack automation platform inspired by Zapier and n8n, tailored specifically for AI-driven social media content creation and publishing. Users upload media, have AI generate captions for LinkedIn and Instagram, receive an email approval request, and upon approval, automatically publish the posts. 
+
+Built from scratch using the **PERN stack (PostgreSQL, Express, React, Node.js) with pure JavaScript**, taking UI design inspiration from the `postpilot` theme.
+
+---
+
+## 2. Problem Statement
+Content creators spend significant time manually writing captions and copy-pasting content into social platforms. This tool eliminates friction by automating caption generation and posting — with a human-in-the-loop approval gate via email, and robust AI fallbacks.
+
+---
+
+## 3. Goals & Success Metrics
+| Goal | Metric |
+|------|--------|
+| Reduce time to post | < 5 mins from upload to email approval |
+| High caption quality | User approval rate > 80% |
+| Reliable posting | Post success rate > 99% |
+| AI Resilience | 100% uptime on caption generation (via fallbacks) |
+
+---
+
+## 4. Core User Flow
+1. User logs into the React dashboard.
+2. User creates a new "Post Automation".
+3. User uploads media (image/video).
+4. User sets tone/style preferences.
+5. **AI generates captions** (using the AI Fallback chain).
+6. System sends an **Approval Email** to the user.
+7. Email contains: [Media Preview + Generated Captions + Approve/Reject Buttons].
+8. If **APPROVED** → Published to LinkedIn & Instagram via APIs.
+9. If **REJECTED** → User redirected to edit the caption.
+10. Post history and metrics logged in the dashboard.
+
+---
+
+## 5. Key Features
+
+### 5.1 Media Upload
+- Supported formats: JPG, PNG, MP4.
+- Max file size: 50MB.
+- Uses Cloudinary (or local file storage) for media handling.
+
+### 5.2 AI Caption Generation (The Fallback Mechanism)
+- **Primary AI:** NVIDIA Build API (DeepSeek v4 Pro).
+- **Secondary AI:** Groq API.
+- **Tertiary AI:** Other Free AI Endpoints.
+- **Logic:** If one API fails/timeouts, the system catches the error and instantly routes the prompt to the next provider.
+
+### 5.3 Email Approval Workflow
+- Triggered immediately after AI generates the caption.
+- **Email contains:**
+  - Media thumbnail preview.
+  - Full AI-generated caption.
+  - **✅ Approve & Post** button (triggers social APIs).
+  - **❌ Reject & Edit** button (opens dashboard editor).
+
+### 5.4 Social Media API Integration
+- **LinkedIn API:** Official REST API (Text, Image, Video).
+- **Instagram API:** Instagram Graph API (Publishing photos/reels).
+- Handles OAuth 2.0 and token refresh cycles.
+
+---
+
+## 6. Technical Architecture (MVC PERN Stack)
+
+### Frontend (`/frontend`)
+- **Framework:** React.js (Vite)
+- **Styling:** Tailwind CSS (matching `postpilot` theme)
+- **Language:** JavaScript
+
+### Backend (`/backend`)
+- **Framework:** Node.js + Express.js (MVC Pattern)
+- **Language:** JavaScript
+- **Email:** Nodemailer
+- **Job Queue:** BullMQ / Redis (for async posting and rate limits)
+
+### Database
+- **PostgreSQL** (Local pgAdmin for dev, Neon for prod).
+- Tables: `users`, `integrations`, `automations`, `post_runs`.
+
+---
+
+## 7. API Endpoints (Express Routes)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/automations` | Create new post automation |
+| GET | `/api/automations` | List all automations |
+| GET | `/api/automations/:id` | Get single automation |
+| GET | `/api/webhook/approve/:id` | Approve post (clicked from email) |
+| GET | `/api/webhook/reject/:id` | Reject post (clicked from email) |
+| POST | `/api/oauth/linkedin` | Connect LinkedIn account |
+| POST | `/api/oauth/instagram` | Connect Instagram account |
+
+---
+
+## 8. Database Schema (High-Level)
+1. **Users:** `id`, `email`, `password_hash`, `created_at`.
+2. **Integrations:** `id`, `user_id`, `platform`, `access_token`, `status`.
+3. **Automations:** `id`, `user_id`, `media_url`, `status`.
+4. **Post_Runs:** `id`, `automation_id`, `content`, `ai_used` (e.g., 'deepseek'), `status` (pending/accepted/rejected/published).
+
+---
+
+## 9. Implementation & Execution Strategy
+
+As requested, we will build this from scratch in a new folder (`post-automation-clone`), executing **one file at a time**. 
+
+### Phase 1: Backend Setup
+1. `backend/package.json`
+2. `backend/.env`
+3. `backend/server.js` (Express setup)
+4. `backend/config/db.js` (PostgreSQL setup)
+
+### Phase 2: Database Models (MVC)
+5. `backend/models/User.js`
+6. `backend/models/Automation.js`
+7. `backend/models/PostRun.js`
+
+### Phase 3: Services (The Core Engines)
+8. `backend/services/aiService.js` (DeepSeek -> Groq fallback logic)
+9. `backend/services/emailService.js` (Nodemailer setup & HTML templates)
+10. `backend/services/linkedinService.js`
+11. `backend/services/instagramService.js`
+
+### Phase 4: Controllers & Routes
+12. `backend/controllers/automationController.js`
+13. `backend/routes/automationRoutes.js`
+14. `backend/controllers/webhookController.js` (Email buttons)
+15. `backend/routes/webhookRoutes.js`
+
+### Phase 5: Frontend Initialization
+16. React initialization (`vite`).
+17. Tailwind setup.
+18. Building out UI screens mapping to the API.
+
+---
+
+## User Review Required
+
+> [!IMPORTANT]
+> This is the final merged PRD. It takes the detailed UI/UX/Flow specs from your document and merges them with your new tech requirements (PERN/JS, Deepseek/Groq fallbacks, and Instagram integration).
+>
+> If you approve this final PRD, we will begin execution immediately starting with Phase 1, Step 1 (`backend/package.json`).
