@@ -21,7 +21,10 @@ import {
   House,
   ShoppingCart,
   Coffee,
-  Car
+  Car,
+  InstagramLogo,
+  LinkedinLogo,
+  Envelope
 } from '@phosphor-icons/react';
 
 if (typeof window !== 'undefined') {
@@ -581,7 +584,34 @@ function CTA({ onDemoStart, demoLoading }) {
 
 function Footer() {
   return (
-    <footer className="border-t border-border/40 py-10 text-center text-xs text-muted-foreground">
+    <footer className="border-t border-border/40 py-12 text-center text-xs text-muted-foreground">
+      <div className="flex flex-wrap justify-center items-center gap-6 mb-6">
+        <a 
+          href="https://instagram.com/k.unal_sahu___" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="hover:text-foreground transition-colors flex items-center gap-2 text-sm"
+        >
+          <InstagramLogo className="h-5 w-5 text-pink-500" />
+          <span className="font-medium">k.unal_sahu___</span>
+        </a>
+        <a 
+          href="https://linkedin.com/in/kunal074" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="hover:text-foreground transition-colors flex items-center gap-2 text-sm"
+        >
+          <LinkedinLogo className="h-5 w-5 text-blue-500" />
+          <span className="font-medium">kunal074</span>
+        </a>
+        <a 
+          href="mailto:kunalsahu232777@gmail.com" 
+          className="hover:text-foreground transition-colors flex items-center gap-2 text-sm"
+        >
+          <Envelope className="h-5 w-5 text-emerald-500" />
+          <span className="font-medium">kunalsahu232777@gmail.com</span>
+        </a>
+      </div>
       <p>© {new Date().getFullYear()} SmartPocket — Made with ❤️ in India</p>
     </footer>
   );
