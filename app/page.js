@@ -585,31 +585,31 @@ function CTA({ onDemoStart, demoLoading }) {
 function Footer() {
   return (
     <footer className="border-t border-border/40 py-12 text-center text-xs text-muted-foreground">
-      <div className="flex flex-wrap justify-center items-center gap-6 mb-6">
+      <div className="flex justify-center items-center gap-5 mb-6">
         <a 
           href="https://instagram.com/k.unal_sahu___" 
           target="_blank" 
           rel="noopener noreferrer" 
-          className="hover:text-foreground transition-colors flex items-center gap-2 text-sm"
+          className="p-3 rounded-full bg-accent/50 hover:bg-pink-500/10 text-muted-foreground hover:text-pink-500 transition-all hover:scale-110 duration-200"
+          title="Instagram"
         >
-          <InstagramLogo className="h-5 w-5 text-pink-500" />
-          <span className="font-medium">k.unal_sahu___</span>
+          <InstagramLogo className="h-5 w-5" />
         </a>
         <a 
           href="https://linkedin.com/in/kunal074" 
           target="_blank" 
           rel="noopener noreferrer" 
-          className="hover:text-foreground transition-colors flex items-center gap-2 text-sm"
+          className="p-3 rounded-full bg-accent/50 hover:bg-blue-500/10 text-muted-foreground hover:text-blue-500 transition-all hover:scale-110 duration-200"
+          title="LinkedIn"
         >
-          <LinkedinLogo className="h-5 w-5 text-blue-500" />
-          <span className="font-medium">kunal074</span>
+          <LinkedinLogo className="h-5 w-5" />
         </a>
         <a 
           href="mailto:kunalsahu232777@gmail.com" 
-          className="hover:text-foreground transition-colors flex items-center gap-2 text-sm"
+          className="p-3 rounded-full bg-accent/50 hover:bg-emerald-500/10 text-muted-foreground hover:text-emerald-500 transition-all hover:scale-110 duration-200"
+          title="Email"
         >
-          <Envelope className="h-5 w-5 text-emerald-500" />
-          <span className="font-medium">kunalsahu232777@gmail.com</span>
+          <Envelope className="h-5 w-5" />
         </a>
       </div>
       <p>© {new Date().getFullYear()} SmartPocket — Made with ❤️ in India</p>
